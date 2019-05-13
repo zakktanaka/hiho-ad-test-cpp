@@ -89,5 +89,6 @@ void hiho::ad04_struct_with_two_elem_array(double s, double sigma, double k, dou
 
 	auto diff = timer.value.v - hiho::american(s, sigma, k, r, t, simulation);
 	std::cout << std::setprecision(std::numeric_limits<double>::max_digits10);
-	std::cout << __func__ << " diff : " << diff << ", time : " << timer.duration() << " msec" << std::endl;
+	std::cout.setf(std::ios::left);
+	std::cout << std::setw(30) << __func__ << " ( " << simulation << " ), diff : " << diff << ", time : " << timer.duration() << " msec" << std::endl;
 }
