@@ -125,6 +125,9 @@
   <ItemGroup>
     <ClCompile Include="hiho\ad00_primitive_double.cpp" />
     <ClCompile Include="hiho\ad01_double_struct.cpp" />
+    <ClCompile Include="hiho\ad02_struct_with_empty_vector.cpp" />
+    <ClCompile Include="hiho\ad03_struct_with_two_elem_vector.cpp" />
+    <ClCompile Include="hiho\ad04_struct_with_two_elem_array.cpp" />
     <ClCompile Include="hiho\ad_american.cpp" />
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
@@ -132,6 +135,9 @@
     <ClInclude Include="hiho\ad.hpp" />
     <ClInclude Include="hiho\ad00_primitive_double.hpp" />
     <ClInclude Include="hiho\ad01_double_struct.hpp" />
+    <ClInclude Include="hiho\ad02_struct_with_empty_vector.hpp" />
+    <ClInclude Include="hiho\ad03_struct_with_two_elem_vector.hpp" />
+    <ClInclude Include="hiho\ad04_struct_with_two_elem_array.hpp" />
     <ClInclude Include="hiho\ad_american.hpp" />
     <ClInclude Include="hiho\timer.hpp" />
   </ItemGroup>
