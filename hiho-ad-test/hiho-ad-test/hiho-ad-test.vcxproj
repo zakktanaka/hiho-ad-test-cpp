@@ -129,6 +129,7 @@
     <ClCompile Include="hiho\ad03_struct_with_two_elem_vector.cpp" />
     <ClCompile Include="hiho\ad04_struct_with_two_elem_array.cpp" />
     <ClCompile Include="hiho\ad05_expression_vector.cpp" />
+    <ClCompile Include="hiho\ad06_expression_vector_copy.cpp" />
     <ClCompile Include="hiho\ad_american.cpp" />
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
@@ -140,6 +141,7 @@
     <ClInclude Include="hiho\ad03_struct_with_two_elem_vector.hpp" />
     <ClInclude Include="hiho\ad04_struct_with_two_elem_array.hpp" />
     <ClInclude Include="hiho\ad05_expression_vector.hpp" />
+    <ClInclude Include="hiho\ad06_expression_vector_copy.hpp" />
     <ClInclude Include="hiho\ad_american.hpp" />
     <ClInclude Include="hiho\timer.hpp" />
   </ItemGroup>

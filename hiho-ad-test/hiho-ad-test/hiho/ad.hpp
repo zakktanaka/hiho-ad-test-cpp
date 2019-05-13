@@ -6,3 +6,4 @@
 #include "ad03_struct_with_two_elem_vector.hpp"
 #include "ad04_struct_with_two_elem_array.hpp"
 #include "ad05_expression_vector.hpp"
+#include "ad06_expression_vector_copy.hpp"
