@@ -5,3 +5,4 @@
 #include "ad02_struct_with_empty_vector.hpp"
 #include "ad03_struct_with_two_elem_vector.hpp"
 #include "ad04_struct_with_two_elem_array.hpp"
+#include "ad05_expression_vector.hpp"
