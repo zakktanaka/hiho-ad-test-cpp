@@ -130,12 +130,24 @@ namespace {
 
 void hiho::ad06_expression_vector_copy(double s, double sigma, double k, double r, double t, int simulation)
 {
+	Real rs{ s };
+	Real rsigma{ sigma };
+	Real rr{ r };
+	Real rt{ t };
+
 	auto timer = hiho::newTimer(
-		[&]() { return putAmericanOption(s, sigma, k, r, t, simulation); }
+		[&]() { return putAmericanOption(rs, rsigma, k, rr, rt, simulation); }
 	);
 
 	auto diff = timer.value.v - hiho::american(s, sigma, k, r, t, simulation);
 	std::cout << std::setprecision(std::numeric_limits<double>::max_digits10);
 	std::cout.setf(std::ios::left);
-	std::cout << std::setw(30) << __func__ << " ( " << simulation << " ), diff : " << diff << ", time : " << timer.duration() << " msec" << std::endl;
+	std::cout << std::setw(30)
+		<< __func__ << " ( " << simulation << " ),"
+		<< "diff : " << diff
+		<< ", time : " << timer.duration() << " msec "
+		<< ", delta : " << timer.value.d(rs)
+		<< ", vega : " << timer.value.d(rsigma)
+		<< ", theta : " << timer.value.d(rt)
+		<< std::endl;
 }
