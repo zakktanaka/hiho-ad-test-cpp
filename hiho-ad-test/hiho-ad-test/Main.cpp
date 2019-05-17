@@ -10,4 +10,5 @@ int main() {
 	ad04_struct_with_two_elem_array (100, 0.2, 100, 0.005, 3, 1000);
 	ad05_expression_vector          (100, 0.2, 100, 0.005, 3, 1000);
 	ad06_expression_vector_copy     (100, 0.2, 100, 0.005, 3,   10);
+	ad07_expression_tape_vector     (100, 0.2, 100, 0.005, 3, 1000);
 }

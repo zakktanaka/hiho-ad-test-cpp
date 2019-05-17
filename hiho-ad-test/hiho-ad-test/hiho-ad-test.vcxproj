@@ -76,6 +76,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -87,6 +88,7 @@
       <Optimization>Disabled</Optimization>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -100,6 +102,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -115,6 +118,7 @@
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
       <ConformanceMode>true</ConformanceMode>
+      <LanguageStandard>stdcpp17</LanguageStandard>
     </ClCompile>
     <Link>
       <SubSystem>Console</SubSystem>
@@ -130,6 +134,7 @@
     <ClCompile Include="hiho\ad04_struct_with_two_elem_array.cpp" />
     <ClCompile Include="hiho\ad05_expression_vector.cpp" />
     <ClCompile Include="hiho\ad06_expression_vector_copy.cpp" />
+    <ClCompile Include="hiho\ad07_expression_tape_vector.cpp" />
     <ClCompile Include="hiho\ad_american.cpp" />
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
@@ -142,6 +147,7 @@
     <ClInclude Include="hiho\ad04_struct_with_two_elem_array.hpp" />
     <ClInclude Include="hiho\ad05_expression_vector.hpp" />
     <ClInclude Include="hiho\ad06_expression_vector_copy.hpp" />
+    <ClInclude Include="hiho\ad07_expression_tape_vector.hpp" />
     <ClInclude Include="hiho\ad_american.hpp" />
     <ClInclude Include="hiho\timer.hpp" />
   </ItemGroup>

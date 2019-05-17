@@ -60,7 +60,7 @@ namespace {
 				return expression.d(x.expression);
 			}
 
-			Number operator-() const { return Number{ -v }; }
+			Number operator-() const { return Number{ -v, Expression{-1, expression, } }; }
 		};
 
 		Number operator+(const Number& l, const Number& r) { return Number{ l.v + r.v, Expression{1, l.expression, 1, r.expression} }; }
