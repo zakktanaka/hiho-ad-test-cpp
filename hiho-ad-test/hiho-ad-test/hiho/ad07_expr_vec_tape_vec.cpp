@@ -1,4 +1,4 @@
-#include "ad07_expression_tape_vector.hpp"
+#include "ad07_expr_vec_tape_vec.hpp"
 
 #include <cmath>
 #include <vector>
@@ -146,7 +146,7 @@ namespace {
 	}
 }
 
-void hiho::ad07_expression_tape_vector(double s, double sigma, double k, double r, double t, int simulation)
+void hiho::ad07_expr_vec_tape_vec(double s, double sigma, double k, double r, double t, int simulation)
 {
 	Real rs{ s };
 	Real rsigma{ sigma };
