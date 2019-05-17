@@ -164,8 +164,8 @@ void hiho::ad08_expr_vec_tape_vec_cache(double s, double sigma, double k, double
 
 	auto func = [&]() { return putAmericanOption(rs, rsigma, k, rr, rt, simulation); };
 	auto timer = hiho::newTimer(func);
+	auto time = timer.duration();
 	auto& value = timer.value;
-	auto time = hiho::measureTime(func);
 
 	auto diff = value.v - hiho::american(s, sigma, k, r, t, simulation);
 	std::cout << std::setprecision(std::numeric_limits<double>::max_digits10);
@@ -178,4 +178,7 @@ void hiho::ad08_expr_vec_tape_vec_cache(double s, double sigma, double k, double
 		<< ", vega : " << value.d(rsigma)
 		<< ", theta : " << value.d(rt)
 		<< std::endl;
+
+	math::Expression::counter = 0;
+	math::Expression::expressions = {};
 }
