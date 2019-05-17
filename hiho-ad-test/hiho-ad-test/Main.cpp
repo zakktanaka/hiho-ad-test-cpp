@@ -11,4 +11,5 @@ int main() {
 	ad05_expression_vector          (100, 0.2, 100, 0.005, 3, 1000);
 	ad06_expression_vector_copy     (100, 0.2, 100, 0.005, 3,   10);
 	ad07_expr_vec_tape_vec          (100, 0.2, 100, 0.005, 3, 1000);
+	ad08_expr_vec_tape_vec_cache    (100, 0.2, 100, 0.005, 3, 1000);
 }

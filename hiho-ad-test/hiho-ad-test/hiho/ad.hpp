@@ -8,3 +8,4 @@
 #include "ad05_expression_vector.hpp"
 #include "ad06_expression_vector_copy.hpp"
 #include "ad07_expr_vec_tape_vec.hpp"
+#include "ad08_expr_vec_tape_vec_cache.hpp"
