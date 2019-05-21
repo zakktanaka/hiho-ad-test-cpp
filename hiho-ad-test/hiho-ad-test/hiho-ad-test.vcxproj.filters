@@ -48,6 +48,9 @@
     <ClCompile Include="hiho\ad08_expr_vec_tape_vec_cache.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="hiho\ad09_expr_vec_tape_list_cache.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="hiho\ad_american.hpp">
@@ -84,6 +87,9 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="hiho\ad08_expr_vec_tape_vec_cache.hpp">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="hiho\ad09_expr_vec_tape_list_cache.hpp">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>

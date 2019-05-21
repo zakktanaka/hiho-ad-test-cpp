@@ -3,6 +3,7 @@
 using namespace hiho;
 
 int main() {
+	ad08_expr_vec_tape_vec_cache    (100, 0.2, 100, 0.005, 3, 3000);
 	ad00_primitive_double           (100, 0.2, 100, 0.005, 3, 1000);
 	ad01_double_struct              (100, 0.2, 100, 0.005, 3, 1000);
 	ad02_struct_with_empty_vector   (100, 0.2, 100, 0.005, 3, 1000);
@@ -13,4 +14,6 @@ int main() {
 	ad07_expr_vec_tape_vec          (100, 0.2, 100, 0.005, 3, 1000);
 	ad08_expr_vec_tape_vec_cache    (100, 0.2, 100, 0.005, 3, 1000);
 	ad08_expr_vec_tape_vec_cache    (100, 0.2, 100, 0.005, 3, 3000);
+	ad09_expr_vec_tape_list_cache   (100, 0.2, 100, 0.005, 3, 1000);
+	ad09_expr_vec_tape_list_cache   (100, 0.2, 100, 0.005, 3, 3000);
 }
