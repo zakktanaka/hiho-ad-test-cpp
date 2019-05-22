@@ -10,3 +10,4 @@
 #include "ad07_expr_vec_tape_vec.hpp"
 #include "ad08_expr_vec_tape_vec_cache.hpp"
 #include "ad09_expr_vec_tape_list_cache.hpp"
+#include "ad10_expr_vec_tape_vec_shrink.hpp"

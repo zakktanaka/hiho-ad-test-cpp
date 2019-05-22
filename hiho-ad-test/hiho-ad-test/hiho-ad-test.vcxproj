@@ -137,6 +137,7 @@
     <ClCompile Include="hiho\ad07_expr_vec_tape_vec.cpp" />
     <ClCompile Include="hiho\ad08_expr_vec_tape_vec_cache.cpp" />
     <ClCompile Include="hiho\ad09_expr_vec_tape_list_cache.cpp" />
+    <ClCompile Include="hiho\ad10_expr_vec_tape_vec_shrink.cpp" />
     <ClCompile Include="hiho\ad_american.cpp" />
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
@@ -152,6 +153,7 @@
     <ClInclude Include="hiho\ad07_expr_vec_tape_vec.hpp" />
     <ClInclude Include="hiho\ad08_expr_vec_tape_vec_cache.hpp" />
     <ClInclude Include="hiho\ad09_expr_vec_tape_list_cache.hpp" />
+    <ClInclude Include="hiho\ad10_expr_vec_tape_vec_shrink.hpp" />
     <ClInclude Include="hiho\ad_american.hpp" />
     <ClInclude Include="hiho\timer.hpp" />
   </ItemGroup>

@@ -16,4 +16,6 @@ int main() {
 	ad08_expr_vec_tape_vec_cache    (100, 0.2, 100, 0.005, 3, 3000);
 	ad09_expr_vec_tape_list_cache   (100, 0.2, 100, 0.005, 3, 1000);
 	ad09_expr_vec_tape_list_cache   (100, 0.2, 100, 0.005, 3, 3000);
+	ad10_expr_vec_tape_vec_shrink   (100, 0.2, 100, 0.005, 3, 1000);
+	ad10_expr_vec_tape_vec_shrink   (100, 0.2, 100, 0.005, 3, 3000);
 }
