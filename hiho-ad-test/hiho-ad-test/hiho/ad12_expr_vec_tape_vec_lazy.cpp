@@ -72,10 +72,10 @@ namespace {
 				return dx;
 			}
 
-			static void appendTerm(Polynomial& polynomial, const Term& term) {
-				for (auto& t : polynomial) {
-					if (t.second == term.second) {
-						t.first += term.first;
+			void addTerm(const Term& term) {
+				for (auto& tm : polynomial) {
+					if (tm.second == term.second) {
+						tm.first += term.first;
 						return;
 					}
 				}
@@ -86,6 +86,7 @@ namespace {
 		struct INumber {
 			virtual ValueType  v() const = 0;
 			virtual ~INumber() {}
+			virtual void update(Expression&, ValueType) const = 0;
 			
 		};
 
@@ -101,6 +102,11 @@ namespace {
 			~Number() {}
 
 			ValueType v() const override { return v_; }
+			void update(Expression& updated, ValueType coef) const override {
+				for (auto& term : expression().polynomial) {
+					updated.addTerm({coef * term.first, term.second});
+				}
+			}
 
 			ValueType d(const Number& x) const {
 				Cache cache;
