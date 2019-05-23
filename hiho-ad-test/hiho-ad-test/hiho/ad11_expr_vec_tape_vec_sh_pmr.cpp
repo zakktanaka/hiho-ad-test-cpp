@@ -43,9 +43,6 @@ namespace {
 				return counter;
 			}
 			static Expression& getExpression(size_t index) {
-				const static size_t dmmy = std::numeric_limits<size_t>::max();
-				static Expression dummy{ dmmy };
-				if (index == dmmy) { return dummy; }
 				return expressions[index];
 			}
 			static void shrinkExpressions() {
@@ -123,7 +120,6 @@ namespace {
 			ValueType  v;
 			size_t expr_;
 
-			Number() : v{ 0 }, expr_{ std::numeric_limits<size_t>::max() }  {}
 			Number(ValueType vv) : v{ vv }, expr_{ Expression::newExpression() }  {expression().reference(); }
 			Number(ValueType vv, size_t expr) : v{ vv }, expr_{ expr }  {expression().reference(); }
 			Number(const Number& other) : v{ other.v }, expr_{ other.expr_ } { expression().reference(); };
