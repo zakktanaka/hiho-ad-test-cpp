@@ -51,7 +51,6 @@ namespace {
 			ValueType  v;
 			Expression expression;
 
-			Number() : v{ 0 }, expression{} {}
 			Number(ValueType vv) : v{ vv }, expression{}  {}
 			Number(ValueType vv, const Expression& expr) : v{ vv }, expression{ expr }  {}
 			Number(ValueType vv, Expression&& expr) : v{ vv }, expression{ expr }  {}

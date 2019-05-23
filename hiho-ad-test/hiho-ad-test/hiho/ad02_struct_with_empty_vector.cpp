@@ -22,7 +22,6 @@ namespace {
 			double v;
 			Polynomial polynomial;
 
-			Number() : v{ 0 } {}
 			Number(double vv) : v{ vv } {}
 
 			Number operator-() const { return Number{ -v }; }

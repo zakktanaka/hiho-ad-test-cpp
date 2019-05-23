@@ -15,7 +15,6 @@ namespace {
 	namespace math {
 		struct Number {
 			double v;
-			Number() : v{ 0 } {}
 			Number(double vv) : v{ vv } {}
 
 			Number operator-() const { return Number{ -v }; }

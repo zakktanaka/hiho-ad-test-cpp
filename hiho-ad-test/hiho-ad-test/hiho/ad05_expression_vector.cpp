@@ -45,7 +45,6 @@ namespace {
 			double v;
 			Expression expression;
 
-			Number() : v{ 0 }, expression{ } {}
 			Number(double vv) : v{ vv } {}
 
 			Number operator-() const { return Number{ -v }; }
