@@ -12,3 +12,4 @@
 #include "ad09_expr_vec_tape_list_cache.hpp"
 #include "ad10_expr_vec_tape_vec_shrink.hpp"
 #include "ad11_expr_vec_tape_vec_sh_pmr.hpp"
+#include "ad12_expr_vec_tape_vec_lazy.hpp"
