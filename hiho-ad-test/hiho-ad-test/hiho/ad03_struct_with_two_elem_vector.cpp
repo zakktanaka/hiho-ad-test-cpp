@@ -87,8 +87,10 @@ void hiho::ad03_struct_with_two_elem_vector(double s, double sigma, double k, do
 	auto diff = value.v - hiho::american(s, sigma, k, r, t, simulation);
 	std::cout << std::setprecision(std::numeric_limits<double>::max_digits10);
 	std::cout.setf(std::ios::left);
-	std::cout << std::setw(30) << __func__ << " ( " << simulation << " )"
+	std::cout << std::setw(30) << __func__ << " ( " << simulation << " )";
+	std::cout.setf(std::ios::right);
+	std::cout
 		<< ", diff : " << diff
-		<< ", time : " << time << " msec"
+		<< ", time : " << std::setw(6) << time << " msec"
 		<< std::endl;
 }

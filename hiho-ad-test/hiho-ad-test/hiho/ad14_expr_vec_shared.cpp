@@ -221,10 +221,11 @@ void hiho::ad14_expr_vec_shared(double s, double sigma, double k, double r, doub
 		auto diff = value.v() - hiho::american(s, sigma, k, r, t, simulation);
 		std::cout << std::setprecision(std::numeric_limits<double>::max_digits10);
 		std::cout.setf(std::ios::left);
-		std::cout << std::setw(30)
-			<< __func__ << " ( " << simulation << " )"
+		std::cout << std::setw(30) << __func__ << " ( " << simulation << " )";
+		std::cout.setf(std::ios::right);
+		std::cout
 			<< ", diff : " << diff
-			<< ", time : " << time << " msec "
+			<< ", time : " << std::setw(6) << time << " msec"
 			<< ", delta : " << value.d(rs)
 			<< ", vega : " << value.d(rsigma)
 			<< ", theta : " << value.d(rt)
