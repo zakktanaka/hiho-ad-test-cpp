@@ -25,6 +25,8 @@ int main() {
 	//ad12_expr_vec_tape_vec_lazy     (100, 0.2, 100, 0.005, 3, 3000);
 	ad13_expr_vec_tape_vec_lazy_pmr (100, 0.2, 100, 0.005, 3, 1000);
 	ad13_expr_vec_tape_vec_lazy_pmr (100, 0.2, 100, 0.005, 3, 3000);
-	ad14_expr_vec_shared            (100, 0.2, 100, 0.005, 3, 1000);
-	ad14_expr_vec_shared            (100, 0.2, 100, 0.005, 3, 3000);
+	//ad14_expr_vec_shared            (100, 0.2, 100, 0.005, 3, 1000);
+	//ad14_expr_vec_shared            (100, 0.2, 100, 0.005, 3, 3000);
+	ad15_expr_vec_pmr_shared        (100, 0.2, 100, 0.005, 3, 1000);
+	ad15_expr_vec_pmr_shared        (100, 0.2, 100, 0.005, 3, 3000);
 }

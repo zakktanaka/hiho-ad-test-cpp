@@ -15,3 +15,4 @@
 #include "ad12_expr_vec_tape_vec_lazy.hpp"
 #include "ad13_expr_vec_tape_vec_lazy_pmr.hpp"
 #include "ad14_expr_vec_shared.hpp"
+#include "ad15_expr_vec_pmr_shared.hpp"
