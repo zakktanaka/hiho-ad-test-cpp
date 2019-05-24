@@ -90,6 +90,39 @@ namespace {
 			
 		};
 
+		struct Unary : INumber {
+			ValueType v_;
+			ValueType coef_;
+			const INumber& num_;
+
+			Unary(ValueType vv, ValueType coef, const INumber& num) :
+				v_(vv), coef_(coef), num_(num) {}
+
+			ValueType v() const override { return v_; }
+			void update(Expression& updated, ValueType coef) const override {
+				num_.update(updated, coef * coef_);
+			}
+		};
+
+		struct Binary : INumber {
+			ValueType v_;
+			ValueType lcoef_;
+			ValueType rcoef_;
+			const INumber& lnum_;
+			const INumber& rnum_;
+
+			Binary(
+				ValueType vv, 
+				ValueType lcoef, const INumber& lnum,
+				ValueType rcoef, const INumber& rnum) :
+				v_(vv), lcoef_(lcoef), rcoef_(rcoef), lnum_(lnum), rnum_(rnum) {}
+
+			ValueType v() const override { return v_; }
+			void update(Expression& updated, ValueType coef) const override {
+				lnum_.update(updated, coef * lcoef_);
+				rnum_.update(updated, coef * rcoef_);
+			}
+		};
 
 		struct Number : public INumber {
 			ValueType  v_;
@@ -97,15 +130,12 @@ namespace {
 
 			Number(ValueType vv) : v_{ vv }, expr_{ Expression::newExpression() }  {}
 			Number(ValueType vv, size_t expr) : v_{ vv }, expr_{ expr }  {}
-			Number(const Number& other) : v_{ other.v_ }, expr_{ other.expr_ } {};
-			Number(Number&& other) : v_{ other.v_ }, expr_{ other.expr_ } { };
+			Number(const INumber& other) : v_{ other.v() }, expr_{ Expression::newExpression() } { other.update(expression(), 1); };
 			~Number() {}
 
 			ValueType v() const override { return v_; }
 			void update(Expression& updated, ValueType coef) const override {
-				for (auto& term : expression().polynomial) {
-					updated.addTerm({coef * term.first, term.second});
-				}
+				updated.addTerm({ coef, expr_ });	
 			}
 
 			ValueType d(const Number& x) const {
@@ -116,41 +146,44 @@ namespace {
 			Expression& expression() const { return Expression::getExpression(expr_); }
 
 			Number operator-() const { return Number{ -v_, Expression::newExpression(-1, expr_) }; }
-			Number& operator=(const Number& other) {
-				this->v_ = other.v_;
-				this->expr_ = other.expr_;
+			Number& operator=(const INumber& other) {
+				Number newone{ other.v() };
+				other.update(newone.expression(), 1);
+				this->v_ = newone.v_;
+				this->expr_ = newone.expr_;
 				return *this;
 			}
 		};
 
-		Number operator+(const Number& l, const Number& r) { return Number{ l.v() + r.v(), Expression::newExpression(1, l.expr_, 1, r.expr_) }; }
-		Number operator-(const Number& l, const Number& r) { return Number{ l.v() - r.v(), Expression::newExpression(1, l.expr_, -1, r.expr_) }; }
-		Number operator*(const Number& l, const Number& r) { return Number{ l.v() * r.v(), Expression::newExpression(r.v_, l.expr_, l.v_, r.expr_) }; }
-		Number operator/(const Number& l, const Number& r) {
+		Binary operator+(const INumber& l, const INumber& r) { return Binary{ l.v() + r.v(), 1, l, 1, r}; }
+		Binary operator-(const INumber& l, const INumber& r) { return Binary{ l.v() - r.v(), 1, l, -1, r}; }
+		Binary operator*(const INumber& l, const INumber& r) { return Binary{ l.v() * r.v(), r.v(), l, l.v(), r}; }
+		Binary operator/(const INumber& l, const INumber& r) {
 			auto ll = l.v();
 			auto rr = r.v();
-			return Number{ l.v() / r.v(), Expression::newExpression(1.0 / rr, l.expr_, -ll / (rr * rr), r.expr_) };
+			return Binary{ l.v() / r.v(), 1.0 / rr, l, -ll / (rr * rr), r };
 		}
-		Number operator+(const Number& l, ValueType r) { return Number{ l.v() + r, Expression::newExpression(1, l.expr_) }; }
-		Number operator-(const Number& l, ValueType r) { return Number{ l.v() - r, Expression::newExpression(1, l.expr_) }; }
-		Number operator*(const Number& l, ValueType r) { return Number{ l.v() * r, Expression::newExpression(r, l.expr_) }; }
-		Number operator/(const Number& l, ValueType r) { return Number{ l.v() / r, Expression::newExpression(1.0 / r, l.expr_) }; }
-		Number operator+(ValueType l, const Number& r) { return Number{ l + r.v(), Expression::newExpression(1, r.expr_) }; }
-		Number operator-(ValueType l, const Number& r) { return Number{ l - r.v(), Expression::newExpression(-1, r.expr_) }; }
-		Number operator*(ValueType l, const Number& r) { return Number{ l * r.v(), Expression::newExpression(l, r.expr_) }; }
-		Number operator/(ValueType l, const Number& r) { return Number{ l / r.v(), Expression::newExpression(-l / (r.v() * r.v()), r.expr_) }; }
-		bool operator>(const Number& l, const Number& r) { return l.v() > r.v(); }
-		Number exp(const Number& l) {
+		Unary operator+(const INumber& l, ValueType r) { return Unary{ l.v() + r, 1, l}; }
+		Unary operator-(const INumber& l, ValueType r) { return Unary{ l.v() - r, 1, l}; }
+		Unary operator*(const INumber& l, ValueType r) { return Unary{ l.v() * r, r, l}; }
+		Unary operator/(const INumber& l, ValueType r) { return Unary{ l.v() / r, 1.0 / r, l}; }
+		Unary operator+(ValueType l, const INumber& r) { return Unary{ l + r.v(), 1, r}; }
+		Unary operator-(ValueType l, const INumber& r) { return Unary{ l - r.v(), -1, r}; }
+		Unary operator*(ValueType l, const INumber& r) { return Unary{ l * r.v(), l, r}; }
+		Unary operator/(ValueType l, const INumber& r) { return Unary{ l / r.v(), -l / (r.v() * r.v()), r}; }
+		bool operator>(const INumber& l, const INumber& r) { return l.v() > r.v(); }
+		bool operator>(const INumber& l, ValueType r) { return l.v() > r; }
+		Unary exp(const INumber& l) {
 			auto ll = std::exp(l.v());
-			return Number{ ll, Expression::newExpression(ll, l.expr_) };
+			return Unary{ ll, ll, l};
 		}
-		Number sqrt(const Number& l) {
-			auto ll = std::sqrt(l.v_);
-			return Number{ ll, Expression::newExpression(0.5 / ll, l.expr_) };
+		Unary sqrt(const INumber& l) {
+			auto ll = std::sqrt(l.v());
+			return Unary{ ll, 0.5 / ll, l};
 		}
-		Number pow(const Number& l, ValueType r) {
-			auto ll = std::pow(l.v_, r);
-			return Number{ ll, Expression::newExpression(r * ll / l.v(), l.expr_) };
+		Unary pow(const INumber& l, ValueType r) {
+			auto ll = std::pow(l.v(), r);
+			return Unary{ ll, r * ll / l.v(), l};
 		}
 
 		using std::exp;
@@ -162,15 +195,15 @@ namespace {
 
 	inline Real putAmericanOption(const Real& s, const Real& sigma, const Real& k, const Real& r, const Real& t, int simulation) {
 
-		auto dt = t / simulation;
-		auto up = math::exp(sigma * math::sqrt(dt));
+		Real dt = t / simulation;
+		Real up = math::exp(sigma * math::sqrt(dt));
 
-		auto p0 = (up - math::exp(-r * dt)) / (up * up - 1);
-		auto p1 = math::exp(-r * dt) - p0;
+		Real p0 = (up - math::exp(-r * dt)) / (up * up - 1);
+		Real p1 = math::exp(-r * dt) - p0;
 
 		std::vector<Real> p;
 		for (int i = 0; i != simulation; ++i) {
-			auto pp = k - s * math::pow(up, 2.0 * i - simulation);
+			Real pp = k - s * math::pow(up, 2.0 * i - simulation);
 			pp = pp > 0.0 ? pp : 0.0;
 			p.push_back(pp);
 		}
@@ -178,7 +211,7 @@ namespace {
 		for (int j = simulation - 1; j != 0; --j) {
 			for (int i = 0; i != j; ++i) {
 				p[i] = p0 * p[i + 1] + p1 * p[i];    // binomial value
-				auto exercise = k - s * math::pow(up, 2.0 * i - j);  // exercise value
+				Real exercise = k - s * math::pow(up, 2.0 * i - j);  // exercise value
 				p[i] = p[i] > exercise ? p[i] : exercise;
 			}
 		}
@@ -211,7 +244,6 @@ void hiho::ad12_expr_vec_tape_vec_lazy(double s, double sigma, double k, double 
 			<< ", vega : " << value.d(rsigma)
 			<< ", theta : " << value.d(rt)
 			<< std::endl;
-
 	}
 	math::Expression::counter = 0;
 	math::Expression::expressions = {};
