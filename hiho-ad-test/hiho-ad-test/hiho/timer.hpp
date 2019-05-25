@@ -46,24 +46,38 @@ namespace hiho {
 	template<typename FUNC>
 	inline auto newTimer(FUNC f) { return Timer<decltype(f())>(f); }
 
-	template<typename FUNC>
-	inline long long measureTime(FUNC f) { 
-		constexpr int loop = 10;
-		
-		long long time = 0;
-		long long min = std::numeric_limits<long long>::max();
-		long long max = 0;
-		for (int i = 0; i != loop+2; ++i) {
-			auto tm = hiho::newTimer(f).duration();
-			if (tm < min) { min = tm; }
-			if (tm > max) { max = tm; }
-			time += tm;
-		}
-		time -= min;
-		time -= max;
-		time /= loop;
+	namespace timer {
+		template<int TIMES, typename FUNC>
+		inline long long measureTime(FUNC f, std::function<void()> preprocess, std::function<void()> postprocess) {
+			constexpr int loop = TIMES;
 
-		return time; 
+			long long time = 0;
+			long long min = std::numeric_limits<long long>::max();
+			long long max = 0;
+			for (int i = 0; i != loop + 2; ++i) {
+				preprocess();
+				auto tm = hiho::newTimer(f).duration();
+				postprocess();
+				if (tm < min) { min = tm; }
+				if (tm > max) { max = tm; }
+				time += tm;
+			}
+			time -= min;
+			time -= max;
+			time /= loop;
+
+			return time;
+		}
+	}
+
+	template<typename FUNC>
+	inline long long measureTime(FUNC f, std::function<void()> postprocess = []() {}) {
+		return timer::measureTime<10>(f, []() {}, postprocess);
+	}
+
+	template<int TIMES, typename FUNC>
+	inline long long measureTime(FUNC f, std::function<void()> postprocess = []() {}) {
+		return timer::measureTime<TIMES>(f, []() {}, postprocess);
 	}
 
 
