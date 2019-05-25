@@ -19,6 +19,7 @@ int main() {
 	ad13_expr_vec_tape_vec_lazy_pmr (100, 0.2, 100, 0.005, 3, 1000);
 	ad14_expr_vec_shared            (100, 0.2, 100, 0.005, 3, 1000);
 	ad15_expr_vec_pmr_shared        (100, 0.2, 100, 0.005, 3, 1000);
+	ad16_exprv_tapv_lazy_pmr_shrnk  (100, 0.2, 100, 0.005, 3, 1000);
 
 	//ad00_primitive_double           (100, 0.2, 100, 0.005, 3, 3000);
 	//ad08_expr_vec_tape_vec_cache    (100, 0.2, 100, 0.005, 3, 3000);

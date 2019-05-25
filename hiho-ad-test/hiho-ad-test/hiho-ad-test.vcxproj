@@ -143,6 +143,7 @@
     <ClCompile Include="hiho\ad13_expr_vec_tape_vec_lazy_pmr.cpp" />
     <ClCompile Include="hiho\ad14_expr_vec_shared.cpp" />
     <ClCompile Include="hiho\ad15_expr_vec_pmr_shared.cpp" />
+    <ClCompile Include="hiho\ad16_exprv_tapv_lazy_pmr_shrnk.cpp" />
     <ClCompile Include="hiho\ad_american.cpp" />
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
@@ -164,6 +165,7 @@
     <ClInclude Include="hiho\ad12_expr_vec_tape_vec_lazy.hpp" />
     <ClInclude Include="hiho\ad14_expr_vec_shared.hpp" />
     <ClInclude Include="hiho\ad15_expr_vec_pmr_shared.hpp" />
+    <ClInclude Include="hiho\ad16_exprv_tapv_lazy_pmr_shrnk.hpp" />
     <ClInclude Include="hiho\ad_american.hpp" />
     <ClInclude Include="hiho\iohelper.hpp" />
     <ClInclude Include="hiho\timer.hpp" />

@@ -69,6 +69,9 @@
     <ClCompile Include="hiho\ad15_expr_vec_pmr_shared.cpp">
       <Filter>ソース ファイル</Filter>
     </ClCompile>
+    <ClCompile Include="hiho\ad16_exprv_tapv_lazy_pmr_shrnk.cpp">
+      <Filter>ソース ファイル</Filter>
+    </ClCompile>
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="hiho\ad_american.hpp">
@@ -129,6 +132,9 @@
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
     <ClInclude Include="hiho\iohelper.hpp">
+      <Filter>ヘッダー ファイル</Filter>
+    </ClInclude>
+    <ClInclude Include="hiho\ad16_exprv_tapv_lazy_pmr_shrnk.hpp">
       <Filter>ヘッダー ファイル</Filter>
     </ClInclude>
   </ItemGroup>
