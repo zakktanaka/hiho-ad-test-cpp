@@ -71,14 +71,23 @@ namespace hiho {
 	}
 
 	template<typename FUNC>
-	inline long long measureTime(FUNC f, std::function<void()> postprocess = []() {}) {
+	inline long long measureTime(FUNC f) {
+		return timer::measureTime<10>(f, []() {}, []() {});
+	}
+
+	template<typename FUNC>
+	inline long long measureTime(FUNC f, std::function<void()> postprocess) {
 		return timer::measureTime<10>(f, []() {}, postprocess);
+	}
+
+	template<int TIMES, typename FUNC>
+	inline long long measureTime(FUNC f) {
+		return timer::measureTime<TIMES>(f, []() {}, []() {});
 	}
 
 	template<int TIMES, typename FUNC>
 	inline long long measureTime(FUNC f, std::function<void()> postprocess = []() {}) {
 		return timer::measureTime<TIMES>(f, []() {}, postprocess);
 	}
-
 
 }
