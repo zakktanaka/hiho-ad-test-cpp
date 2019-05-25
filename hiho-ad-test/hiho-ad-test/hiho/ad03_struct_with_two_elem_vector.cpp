@@ -4,12 +4,9 @@
 #include <vector>
 #include <utility>
 
-#include <iostream>
-#include <iomanip>
-#include <limits>
-
 #include "ad_american.hpp"
 #include "timer.hpp"
+#include "iohelper.hpp"
 
 namespace {
 
@@ -85,12 +82,12 @@ void hiho::ad03_struct_with_two_elem_vector(double s, double sigma, double k, do
 	auto value = func();
 
 	auto diff = value.v - hiho::american(s, sigma, k, r, t, simulation);
-	std::cout << std::setprecision(std::numeric_limits<double>::max_digits10);
-	std::cout.setf(std::ios::left);
-	std::cout << std::setw(30) << __func__ << " ( " << simulation << " )";
-	std::cout.setf(std::ios::right);
-	std::cout
-		<< ", diff : " << diff
-		<< ", time : " << std::setw(6) << time << " msec"
+
+	HIHO_IO_MAX_LEN_DOUBLE_LSHOW;
+	HIHO_IO_LEFT_COUT
+		<< HIHO_IO_FUNC_WIDTH << __func__ << " ( " << simulation << " )";
+	HIHO_IO_RIGHT_COUT
+		<< ", " << HIHO_IO_VALUE(diff)
+		<< ", " << HIHO_IO_TIME(time)
 		<< std::endl;
 }

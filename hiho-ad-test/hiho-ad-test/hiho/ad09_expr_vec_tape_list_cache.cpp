@@ -6,12 +6,9 @@
 #include <utility>
 #include <unordered_map>
 
-#include <iostream>
-#include <iomanip>
-#include <limits>
-
 #include "ad_american.hpp"
 #include "timer.hpp"
+#include "iohelper.hpp"
 
 namespace {
 
@@ -159,16 +156,20 @@ void hiho::ad09_expr_vec_tape_list_cache(double s, double sigma, double k, doubl
 	auto& value = timer.value;
 
 	auto diff = value.v - hiho::american(s, sigma, k, r, t, simulation);
-	std::cout << std::setprecision(std::numeric_limits<double>::max_digits10);
-	std::cout.setf(std::ios::left);
-	std::cout << std::setw(30) << __func__ << " ( " << simulation << " )";
-	std::cout.setf(std::ios::right);
-	std::cout
-		<< ", diff : " << diff
-		<< ", time : " << std::setw(6) << time << " msec"
-		<< ", delta : " << value.d(rs)
-		<< ", vega : " << value.d(rsigma)
-		<< ", theta : " << value.d(rt)
+
+	auto delta = hiho::newTimer([&]() {return value.d(rs); });
+	auto vega = hiho::newTimer([&]() {return value.d(rsigma); });
+	auto theta = hiho::newTimer([&]() {return value.d(rt); });
+
+	HIHO_IO_MAX_LEN_DOUBLE_LSHOW;
+	HIHO_IO_LEFT_COUT
+		<< HIHO_IO_FUNC_WIDTH << __func__ << " ( " << simulation << " )";
+	HIHO_IO_RIGHT_COUT
+		<< ", " << HIHO_IO_VALUE(diff)
+		<< ", " << HIHO_IO_TIME(time)
+		<< ", " << HIHO_IO_VALUE_TIME(delta)
+		<< ", " << HIHO_IO_VALUE_TIME(vega)
+		<< ", " << HIHO_IO_VALUE_TIME(theta)
 		<< std::endl;
 
 	math::Expression::expressions = {};
