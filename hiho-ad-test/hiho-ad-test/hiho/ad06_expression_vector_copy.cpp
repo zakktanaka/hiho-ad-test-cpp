@@ -132,9 +132,8 @@ void hiho::ad06_expression_vector_copy(double s, double sigma, double k, double 
 	Real rt{ t };
 
 	auto func = [&]() { return putAmericanOption(rs, rsigma, k, rr, rt, simulation); };
-	auto timer = hiho::newTimer(func);
-	auto& value = timer.value;
-	auto time = hiho::measureTime(func);
+	auto time = hiho::measureTime<1>(func);
+	auto value = func();
 
 	auto diff = value.v - hiho::american(s, sigma, k, r, t, simulation);
 

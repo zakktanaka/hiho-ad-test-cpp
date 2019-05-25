@@ -224,40 +224,46 @@ namespace {
 void hiho::ad13_expr_vec_tape_vec_lazy_pmr(double s, double sigma, double k, double r, double t, int simulation)
 {
 	auto dfpm = pmr::get_default_resource();
-	auto pm = pmr::monotonic_buffer_resource();
+	auto pm = pmr::unsynchronized_pool_resource();
 	pmr::set_default_resource(&pm);
 	{
+		Real rs{ 0 };
+		Real rsigma{ 0 };
+		Real rr{ 0 };
+		Real rt{ 0 };
 
-		{
-			Real rs{ s };
-			Real rsigma{ sigma };
-			Real rr{ r };
-			Real rt{ t };
+		auto func = [&]() {
+			rs = s;
+			rsigma = sigma;
+			rr = r;
+			rt = t;
+			return putAmericanOption(rs, rsigma, k, rr, rt, simulation);
+		};
+		auto postprocess = []() {
+			math::Expression::counter = 0;
+			math::Expression::expressions = {};
+		};
+		auto time = hiho::measureTime<3>(func, postprocess);
+		auto value = func();
 
-			auto func = [&]() { return putAmericanOption(rs, rsigma, k, rr, rt, simulation); };
-			auto timer = hiho::newTimer(func);
-			auto time = timer.duration();
-			auto& value = timer.value;
+		auto diff = value.v() - hiho::american(s, sigma, k, r, t, simulation);
 
-			auto diff = value.v() - hiho::american(s, sigma, k, r, t, simulation);
+		auto delta = hiho::newTimer([&]() {return value.d(rs); });
+		auto vega = hiho::newTimer([&]() {return value.d(rsigma); });
+		auto theta = hiho::newTimer([&]() {return value.d(rt); });
 
-			auto delta = hiho::newTimer([&]() {return value.d(rs); });
-			auto vega = hiho::newTimer([&]() {return value.d(rsigma); });
-			auto theta = hiho::newTimer([&]() {return value.d(rt); });
+		HIHO_IO_MAX_LEN_DOUBLE_LSHOW;
+		HIHO_IO_LEFT_COUT
+			<< HIHO_IO_FUNC_WIDTH << __func__ << " ( " << simulation << " )";
+		HIHO_IO_RIGHT_COUT
+			<< ", " << HIHO_IO_VALUE(diff)
+			<< ", " << HIHO_IO_TIME(time)
+			<< ", " << HIHO_IO_VALUE_TIME(delta)
+			<< ", " << HIHO_IO_VALUE_TIME(vega)
+			<< ", " << HIHO_IO_VALUE_TIME(theta)
+			<< std::endl;
 
-			HIHO_IO_MAX_LEN_DOUBLE_LSHOW;
-			HIHO_IO_LEFT_COUT
-				<< HIHO_IO_FUNC_WIDTH << __func__ << " ( " << simulation << " )";
-			HIHO_IO_RIGHT_COUT
-				<< ", " << HIHO_IO_VALUE(diff)
-				<< ", " << HIHO_IO_TIME(time)
-				<< ", " << HIHO_IO_VALUE_TIME(delta)
-				<< ", " << HIHO_IO_VALUE_TIME(vega)
-				<< ", " << HIHO_IO_VALUE_TIME(theta)
-				<< std::endl;
-		}
-		math::Expression::counter = 0;
-		math::Expression::expressions = {};
+		postprocess();
 	}
 	pmr::set_default_resource(dfpm);
 }

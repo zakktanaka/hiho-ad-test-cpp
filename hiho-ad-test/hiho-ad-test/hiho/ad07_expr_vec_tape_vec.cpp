@@ -151,9 +151,12 @@ void hiho::ad07_expr_vec_tape_vec(double s, double sigma, double k, double r, do
 	Real rt{ t };
 
 	auto func = [&]() { return putAmericanOption(rs, rsigma, k, rr, rt, simulation); };
-	auto timer = hiho::newTimer(func);
-	auto time = timer.duration();
-	auto& value = timer.value;
+	auto postprocess =[]() {
+		math::Expression::counter = 0;
+		math::Expression::expressions = {};
+	};
+	auto time = hiho::measureTime<3>(func, postprocess);
+	auto value = func();
 
 	auto diff = value.v - hiho::american(s, sigma, k, r, t, simulation);
 
@@ -166,6 +169,5 @@ void hiho::ad07_expr_vec_tape_vec(double s, double sigma, double k, double r, do
 		<< ", greeks calculation is too late"
 		<< std::endl;
 
-	math::Expression::counter = 0;
-	math::Expression::expressions = {};
+	postprocess();
 }

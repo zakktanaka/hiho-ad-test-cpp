@@ -154,15 +154,24 @@ namespace {
 
 void hiho::ad08_expr_vec_tape_vec_cache(double s, double sigma, double k, double r, double t, int simulation)
 {
-	Real rs{ s };
-	Real rsigma{ sigma };
-	Real rr{ r };
-	Real rt{ t };
+	Real rs{ 0 };
+	Real rsigma{ 0 };
+	Real rr{ 0 };
+	Real rt{ 0 };
 
-	auto func = [&]() { return putAmericanOption(rs, rsigma, k, rr, rt, simulation); };
-	auto timer = hiho::newTimer(func);
-	auto time = timer.duration();
-	auto& value = timer.value;
+	auto func = [&]() { 
+		rs = s;
+		rsigma = sigma;
+		rr = r;
+		rt = t;
+		return putAmericanOption(rs, rsigma, k, rr, rt, simulation); 
+	};
+	auto postprocess = []() {
+		math::Expression::counter = 0;
+		math::Expression::expressions = {};
+	};
+	auto time = hiho::measureTime<3>(func, postprocess);
+	auto value = func();
 
 	auto diff = value.v - hiho::american(s, sigma, k, r, t, simulation);
 
@@ -181,6 +190,5 @@ void hiho::ad08_expr_vec_tape_vec_cache(double s, double sigma, double k, double
 		<< ", " << HIHO_IO_VALUE_TIME(theta)
 		<< std::endl;
 
-	math::Expression::counter = 0;
-	math::Expression::expressions = {};
+	postprocess();
 }

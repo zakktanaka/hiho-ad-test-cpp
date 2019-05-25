@@ -204,32 +204,35 @@ namespace {
 
 void hiho::ad14_expr_vec_shared(double s, double sigma, double k, double r, double t, int simulation)
 {
-	{
-		Real rs{ s };
-		Real rsigma{ sigma };
-		Real rr{ r };
-		Real rt{ t };
+	Real rs{ 0 };
+	Real rsigma{ 0 };
+	Real rr{ 0 };
+	Real rt{ 0 };
 
-		auto func = [&]() { return putAmericanOption(rs, rsigma, k, rr, rt, simulation); };
-		auto timer = hiho::newTimer(func);
-		auto time = timer.duration();
-		auto& value = timer.value;
+	auto func = [&]() {
+		rs = s;
+		rsigma = sigma;
+		rr = r;
+		rt = t;
+		return putAmericanOption(rs, rsigma, k, rr, rt, simulation);
+	};
+	auto time = hiho::measureTime<3>(func);
+	auto value = func();
 
-		auto diff = value.v() - hiho::american(s, sigma, k, r, t, simulation);
+	auto diff = value.v() - hiho::american(s, sigma, k, r, t, simulation);
 
-		auto delta = hiho::newTimer([&]() {return value.d(rs); });
-		auto vega = hiho::newTimer([&]() {return value.d(rsigma); });
-		auto theta = hiho::newTimer([&]() {return value.d(rt); });
+	auto delta = hiho::newTimer([&]() {return value.d(rs); });
+	auto vega = hiho::newTimer([&]() {return value.d(rsigma); });
+	auto theta = hiho::newTimer([&]() {return value.d(rt); });
 
-		HIHO_IO_MAX_LEN_DOUBLE_LSHOW;
-		HIHO_IO_LEFT_COUT
-			<< HIHO_IO_FUNC_WIDTH << __func__ << " ( " << simulation << " )";
-		HIHO_IO_RIGHT_COUT
-			<< ", " << HIHO_IO_VALUE(diff)
-			<< ", " << HIHO_IO_TIME(time)
-			<< ", " << HIHO_IO_VALUE_TIME(delta)
-			<< ", " << HIHO_IO_VALUE_TIME(vega)
-			<< ", " << HIHO_IO_VALUE_TIME(theta)
-			<< std::endl;
-	}
+	HIHO_IO_MAX_LEN_DOUBLE_LSHOW;
+	HIHO_IO_LEFT_COUT
+		<< HIHO_IO_FUNC_WIDTH << __func__ << " ( " << simulation << " )";
+	HIHO_IO_RIGHT_COUT
+		<< ", " << HIHO_IO_VALUE(diff)
+		<< ", " << HIHO_IO_TIME(time)
+		<< ", " << HIHO_IO_VALUE_TIME(delta)
+		<< ", " << HIHO_IO_VALUE_TIME(vega)
+		<< ", " << HIHO_IO_VALUE_TIME(theta)
+		<< std::endl;
 }
