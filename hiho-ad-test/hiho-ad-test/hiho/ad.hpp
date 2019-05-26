@@ -18,3 +18,4 @@
 #include "ad15_expr_vec_pmr_shared.hpp"
 #include "ad16_exprv_tapv_lazy_pmr_shrnk.hpp"
 #include "ad17_expr_vec_shared_shrink.hpp"
+#include "ad18_expr_vec_shared_pmr_shrink.hpp"
