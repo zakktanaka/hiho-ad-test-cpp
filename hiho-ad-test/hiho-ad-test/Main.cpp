@@ -22,6 +22,8 @@ int main() {
 	ad16_exprv_tapv_lazy_pmr_shrnk  (100, 0.2, 100, 0.005, 3, 1000);
 	ad17_expr_vec_shared_shrink     (100, 0.2, 100, 0.005, 3, 1000);
 	ad18_expr_vec_shared_pmr_shrink (100, 0.2, 100, 0.005, 3, 1000);
+	ad19_expr_vec_shared_mark       (100, 0.2, 100, 0.005, 3, 1000);
+	ad20_expr_vec_shrd_mrk_pmr      (100, 0.2, 100, 0.005, 3, 1000);
 
 	//ad00_primitive_double           (100, 0.2, 100, 0.005, 3, 3000);
 	//ad08_expr_vec_tape_vec_cache    (100, 0.2, 100, 0.005, 3, 3000);
@@ -35,4 +37,6 @@ int main() {
 	//ad16_exprv_tapv_lazy_pmr_shrnk  (100, 0.2, 100, 0.005, 3, 3000);
 	//ad17_expr_vec_shared_shrink     (100, 0.2, 100, 0.005, 3, 3000);
 	//ad18_expr_vec_shared_pmr_shrink (100, 0.2, 100, 0.005, 3, 3000);
+	//ad19_expr_vec_shared_mark       (100, 0.2, 100, 0.005, 3, 3000);
+	//ad20_expr_vec_shrd_mrk_pmr      (100, 0.2, 100, 0.005, 3, 1000);
 }

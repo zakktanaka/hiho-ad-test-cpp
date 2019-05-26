@@ -146,6 +146,8 @@
     <ClCompile Include="hiho\ad16_exprv_tapv_lazy_pmr_shrnk.cpp" />
     <ClCompile Include="hiho\ad17_expr_vec_shared_shrink.cpp" />
     <ClCompile Include="hiho\ad18_expr_vec_shared_pmr_shrink.cpp" />
+    <ClCompile Include="hiho\ad19_expr_vec_shared_mark.cpp" />
+    <ClCompile Include="hiho\ad20_expr_vec_shrd_mrk_pmr.cpp" />
     <ClCompile Include="hiho\ad_american.cpp" />
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
@@ -170,6 +172,8 @@
     <ClInclude Include="hiho\ad16_exprv_tapv_lazy_pmr_shrnk.hpp" />
     <ClInclude Include="hiho\ad17_expr_vec_shared_shrink.hpp" />
     <ClInclude Include="hiho\ad18_expr_vec_shared_pmr_shrink.hpp" />
+    <ClInclude Include="hiho\ad19_expr_vec_shared_mark.hpp" />
+    <ClInclude Include="hiho\ad20_expr_vec_shrd_mrk_pmr.hpp" />
     <ClInclude Include="hiho\ad_american.hpp" />
     <ClInclude Include="hiho\iohelper.hpp" />
     <ClInclude Include="hiho\timer.hpp" />
