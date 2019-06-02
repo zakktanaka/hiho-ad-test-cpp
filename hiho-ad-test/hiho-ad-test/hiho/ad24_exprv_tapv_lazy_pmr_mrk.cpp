@@ -1,4 +1,4 @@
-#include "ad23_exprump_tpv_lazy_pmr_mrk.hpp"
+#include "ad24_exprv_tapv_lazy_pmr_mrk.hpp"
 
 #include <cmath>
 #include <utility>
@@ -26,7 +26,8 @@ namespace {
 	namespace math {
 
 		struct Expression {
-			using Polynomial = pmr::unordered_map<size_t, ValueType>;
+			using Term       = std::pair<ValueType, size_t>;
+			using Polynomial = pmr::vector<Term>;
 
 			static inline size_t counter = 0;
 			static inline pmr::vector<Expression> expressions{};
@@ -46,19 +47,14 @@ namespace {
 			size_t index;
 			Polynomial polynomial;
 
-			Expression(size_t indx) : marked(false), index(indx), polynomial{} {}
+			Expression(size_t indx) : marked{false}, index(indx), polynomial{} {}
 			Expression(size_t indx,
 				ValueType cof, size_t expr
-			) : marked(false), index(indx), polynomial{} {
-				polynomial[expr] = cof;
-			}
+			) : marked{ false }, index(indx), polynomial{ {cof, expr} } {}
 			Expression(size_t indx,
 				ValueType lcof, size_t lhs,
 				ValueType rcof, size_t rhs
-			) : marked(false), index(indx), polynomial{} {
-				polynomial[lhs] = lcof;
-				polynomial[rhs] = rcof;
-			}
+			) : marked{ false }, index(indx), polynomial{ {lcof, lhs},{rcof, rhs} } {}
 
 			void mark() { marked = true; }
 
@@ -74,30 +70,30 @@ namespace {
 
 				ValueType dx = 0;
 				for (auto& term : polynomial) {
-					dx += term.second * getExpression(term.first).d(expr, cache);
+					dx += term.first * getExpression(term.second).d(expr, cache);
 				}
 				cache[index] = dx;
 				return dx;
 			}
 
-			void addTerm(size_t expr, ValueType val) {
-				auto it = polynomial.find(expr);
-				if (it == std::end(polynomial)) {
-					polynomial[expr] = val;
+			void addTerm(const Term& term) {
+				for (auto& tm : polynomial) {
+					if (tm.second == term.second) {
+						tm.first += term.first;
+						return;
+					}
 				}
-				else {
-					it->second += val;
-				}
+				polynomial.emplace_back(term);
 			}
 
-			static void appendTerm(Polynomial& polynomial, size_t expr, ValueType val) {
-				auto it = polynomial.find(expr);
-				if (it == std::end(polynomial)) {
-					polynomial[expr] = val;
+			static void appendTerm(Polynomial& polynomial, const Term& term) {
+				for (auto& t : polynomial) {
+					if (t.second == term.second) {
+						t.first += term.first;
+						return;
+					}
 				}
-				else {
-					it->second += val;
-				}
+				polynomial.emplace_back(term);
 			}
 		};
 
@@ -159,10 +155,10 @@ namespace {
 			ValueType v() const override { return v_; }
 			void update(Expression& updated, ValueType coef) const override {
 				if (expression().marked) {
-					updated.addTerm(expr_, coef);
+					updated.addTerm({ coef, expr_ });
 				} else {
 					for (auto& term : expression().polynomial) {
-						updated.addTerm(term.first, coef * term.second);
+						updated.addTerm({ coef * term.first, term.second });
 					}
 				}
 			}
@@ -254,7 +250,7 @@ namespace {
 	}
 }
 
-void hiho::ad23_exprump_tpv_lazy_pmr_mrk(double s, double sigma, double k, double r, double t, int simulation)
+void hiho::ad24_exprv_tapv_lazy_pmr_mrk(double s, double sigma, double k, double r, double t, int simulation)
 {
 	auto dfpm = pmr::get_default_resource();
 	auto pm = pmr::unsynchronized_pool_resource();
