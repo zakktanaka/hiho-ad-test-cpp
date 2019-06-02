@@ -150,6 +150,7 @@
     <ClCompile Include="hiho\ad20_expr_vec_shrd_mrk_pmr.cpp" />
     <ClCompile Include="hiho\ad21_exprump_tpv_lazy_pmr_shrnk.cpp" />
     <ClCompile Include="hiho\ad22_expr_umap_shrd_mrk_pmr.cpp" />
+    <ClCompile Include="hiho\ad23_exprump_tpv_lazy_pmr_mrk.cpp" />
     <ClCompile Include="hiho\ad_american.cpp" />
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
@@ -177,6 +178,7 @@
     <ClInclude Include="hiho\ad19_expr_vec_shared_mark.hpp" />
     <ClInclude Include="hiho\ad20_expr_vec_shrd_mrk_pmr.hpp" />
     <ClInclude Include="hiho\ad22_expr_umap_shrd_mrk_pmr.hpp" />
+    <ClInclude Include="hiho\ad23_exprump_tpv_lazy_pmr_mrk.hpp" />
     <ClInclude Include="hiho\ad_american.hpp" />
     <ClInclude Include="hiho\ad21_exprump_tpv_lazy_pmr_shrnk.hpp" />
     <ClInclude Include="hiho\iohelper.hpp" />

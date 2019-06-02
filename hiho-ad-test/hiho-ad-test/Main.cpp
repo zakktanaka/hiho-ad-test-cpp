@@ -33,6 +33,7 @@ int main(int argc, char* argv[]) {
 	FUNC( 20, ad20_expr_vec_shrd_mrk_pmr      (100, 0.2, 100, 0.005, 3, 1000));
 	FUNC( 21, ad21_exprump_tpv_lazy_pmr_shrnk (100, 0.2, 100, 0.005, 3, 1000));
 	FUNC( 22, ad22_expr_umap_shrd_mrk_pmr     (100, 0.2, 100, 0.005, 3, 1000));
+	FUNC( 23, ad23_exprump_tpv_lazy_pmr_mrk   (100, 0.2, 100, 0.005, 3, 1000));
 
 	FUNC(300, ad00_primitive_double           (100, 0.2, 100, 0.005, 3, 3000));
 	FUNC(308, ad08_expr_vec_tape_vec_cache    (100, 0.2, 100, 0.005, 3, 3000));
@@ -50,4 +51,5 @@ int main(int argc, char* argv[]) {
 	FUNC(320, ad20_expr_vec_shrd_mrk_pmr      (100, 0.2, 100, 0.005, 3, 3000));
 	FUNC(321, ad21_exprump_tpv_lazy_pmr_shrnk (100, 0.2, 100, 0.005, 3, 3000));
 	FUNC(322, ad22_expr_umap_shrd_mrk_pmr     (100, 0.2, 100, 0.005, 3, 3000));
+	FUNC(323, ad23_exprump_tpv_lazy_pmr_mrk   (100, 0.2, 100, 0.005, 3, 3000));
 }
