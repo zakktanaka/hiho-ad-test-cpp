@@ -26,7 +26,8 @@ namespace {
 	namespace math {
 
 		struct Expression {
-			using Polynomial = pmr::unordered_map<size_t, ValueType>;
+			using Term       = std::pair<ValueType, size_t>;
+			using Polynomial = pmr::vector<Term>;
 
 			static inline size_t counter = 0;
 			static inline pmr::vector<Expression> expressions{};
@@ -42,25 +43,21 @@ namespace {
 				return expressions[index];
 			}
 
-			bool marked;
+			size_t ref;
 			size_t index;
 			Polynomial polynomial;
 
-			Expression(size_t indx) : marked(false), index(indx), polynomial{} {}
+			Expression(size_t indx) : ref(0), index(indx), polynomial{} {}
 			Expression(size_t indx,
 				ValueType cof, size_t expr
-			) : marked(false), index(indx), polynomial{} {
-				polynomial[expr] = cof;
-			}
+			) : ref(0), index(indx), polynomial{ {cof, expr} } {}
 			Expression(size_t indx,
 				ValueType lcof, size_t lhs,
 				ValueType rcof, size_t rhs
-			) : marked(false), index(indx), polynomial{} {
-				polynomial[lhs] = lcof;
-				polynomial[rhs] = rcof;
-			}
+			) : ref(0), index(indx), polynomial{ {lcof, lhs},{rcof, rhs} } {}
 
-			void mark() { marked = true; }
+			void reference() { ++ref; }
+			void dreference() { --ref; }
 
 			ValueType d(const Expression& expr, Cache& cache) const {
 				if (index == expr.index) {
@@ -74,29 +71,55 @@ namespace {
 
 				ValueType dx = 0;
 				for (auto& term : polynomial) {
-					dx += term.second * getExpression(term.first).d(expr, cache);
+					dx += term.first * getExpression(term.second).d(expr, cache);
 				}
 				cache[index] = dx;
 				return dx;
 			}
 
-			void addTerm(size_t expr, ValueType val) {
-				auto it = polynomial.find(expr);
-				if (it == std::end(polynomial)) {
-					polynomial[expr] = val;
+			void addTerm(const Term& term) {
+				for (auto& tm : polynomial) {
+					if (tm.second == term.second) {
+						tm.first += term.first;
+						return;
+					}
 				}
-				else {
-					it->second += val;
-				}
+				polynomial.emplace_back(term);
 			}
 
-			static void appendTerm(Polynomial& polynomial, size_t expr, ValueType val) {
-				auto it = polynomial.find(expr);
-				if (it == std::end(polynomial)) {
-					polynomial[expr] = val;
+			static void appendTerm(Polynomial& polynomial, const Term& term) {
+				for (auto& t : polynomial) {
+					if (t.second == term.second) {
+						t.first += term.first;
+						return;
+					}
 				}
-				else {
-					it->second += val;
+				polynomial.emplace_back(term);
+			}
+
+			void shrink() {
+				Polynomial newpoly;
+
+				for (auto& t0 : polynomial) {
+					auto& t0exp = getExpression(t0.second);
+					if (t0exp.ref != 0) {
+						appendTerm(newpoly, t0);
+					}
+					else {
+						for (auto& t1 : t0exp.polynomial) {
+							if (getExpression(t1.second).ref != 0) {
+								appendTerm(newpoly, { t0.first * t1.first, t1.second });
+							}
+						}
+					}
+				}
+
+				polynomial = std::move(newpoly);
+			}
+
+			static void shrinkExpressions() {
+				for (auto& expr : expressions) {
+					expr.shrink();
 				}
 			}
 		};
@@ -146,26 +169,18 @@ namespace {
 			ValueType  v_;
 			size_t expr_;
 
-			Number(ValueType vv) : v_{ vv }, expr_{ Expression::newExpression() }  {}
-			Number(ValueType vv, size_t expr) : v_{ vv }, expr_{ expr }  {}
-			Number(const Number& other) : v_{ other.v_ }, expr_{ other.expr_ } {}
+			Number(ValueType vv) : v_{ vv }, expr_{ Expression::newExpression() }  { expression().reference(); }
+			Number(ValueType vv, size_t expr) : v_{ vv }, expr_{ expr }  {expression().reference(); }
+			Number(const Number& other) : v_{ other.v_ }, expr_{ other.expr_ } {expression().reference(); }
 			Number(const INumber& other) : v_{ other.v() }, expr_{ Expression::newExpression() } {
+				expression().reference();
 				other.update(expression(), 1);
 			};
-			~Number() {}
-
-			void mark() { expression().mark(); }
+			~Number() { expression().dreference(); }
 
 			ValueType v() const override { return v_; }
 			void update(Expression& updated, ValueType coef) const override {
-				if (expression().marked) {
-					updated.addTerm(expr_, coef);
-				}
-				else {
-					for (auto& term : expression().polynomial) {
-						updated.addTerm(term.first, coef * term.second);
-					}
-				}
+				updated.addTerm({ coef, expr_ });
 			}
 
 			ValueType d(const Number& x) const {
@@ -177,15 +192,19 @@ namespace {
 
 			Number operator-() const { return Number{ -v_, Expression::newExpression(-1, expr_) }; }
 			Number& operator=(const Number& other) {
+				this->expression().dreference();
 				this->v_ = other.v_;
 				this->expr_ = other.expr_;
+				this->expression().reference();
 				return *this;
 			}
 			Number& operator=(const INumber& other) {
+				this->expression().dreference();
 				Number newone{ other.v() };
 				other.update(newone.expression(), 1);
 				this->v_ = newone.v_;
 				this->expr_ = newone.expr_;
+				this->expression().reference();
 				return *this;
 			}
 		};
@@ -262,11 +281,12 @@ void hiho::ad25_exprump_tp_pclass_pzypmrmrk(double s, double sigma, double k, do
 	pmr::set_default_resource(&pm);
 	{
 		auto func = [&]() {
-			Real rs{ s }; rs.mark();
-			Real rsigma{ sigma }; rsigma.mark();
-			Real rr{ r }; rr.mark();
-			Real rt{ t }; rt.mark();
+			Real rs{ s };
+			Real rsigma{ sigma };
+			Real rr{ r };
+			Real rt{ t };
 			auto value = putAmericanOption(rs, rsigma, k, rr, rt, simulation);
+			math::Expression::shrinkExpressions();
 			return pmr::vector<Real>{ value, rs, rsigma, rr, rt };
 		};
 		auto postprocess = []() {
