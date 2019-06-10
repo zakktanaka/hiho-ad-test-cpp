@@ -24,11 +24,13 @@ namespace {
 			using Term       = std::pair<ValueType, ExprPtr>;
 			using Polynomial = pmr::vector<Term>;
 
+			bool marked;
 			size_t ref;
 			Polynomial polynomial;
 
-			Expression() : ref(0), polynomial{} {}
+			Expression() : marked{false}, ref(0), polynomial{} {}
 
+			void mark() { marked = true; }
 			void reference() { ++ref; }
 			void dreference() { --ref; }
 
@@ -51,14 +53,22 @@ namespace {
 			}
 
 			ExprPtr addTerm(const Term& term) {
-				for (auto& tm : polynomial) {
-					if (tm.second == term.second) {
-						tm.first += term.first;
-						return this;
+				if (term.second->marked) {
+					for (auto& tm : polynomial) {
+						if (tm.second == term.second) {
+							tm.first += term.first;
+							return this;
+						}
 					}
+					polynomial.emplace_back(term);
+					return this;
+				} else {
+					for (auto& tt : term.second->polynomial) {
+						addTerm({term.first * tt.first, tt.second});
+					}
+					return this;
 				}
-				polynomial.emplace_back(term);
-				return this;
+
 			}
 
 		};
@@ -195,6 +205,8 @@ namespace {
 				if (expression().ref == 0) { repository->dispose(expr_); }
 			}
 
+			void mark() { expression().mark(); }
+
 			ValueType v() const override { return v_; }
 			void update(Expression& updated, ValueType coef) const override {
 				updated.addTerm({ coef, expr_ });
@@ -306,17 +318,17 @@ namespace {
 void hiho::ad25_exprump_tp_pclass_pzypmrmrk(double s, double sigma, double k, double r, double t, int simulation)
 {
 	auto dfpm = pmr::get_default_resource();
-	//auto pm = pmr::unsynchronized_pool_resource();
-	//pmr::set_default_resource(&pm);
+	auto pm = pmr::unsynchronized_pool_resource();
+	pmr::set_default_resource(&pm);
 	{
 		math::DataRepository rep;
 		math::repository = &rep;
 
 		auto func = [&]() {
-			Real rs{ s };
-			Real rsigma{ sigma };
-			Real rr{ r };
-			Real rt{ t };
+			Real rs{ s }; rs.mark();
+			Real rsigma{ sigma }; rsigma.mark();
+			Real rr{ r }; rr.mark();
+			Real rt{ t }; rt.mark();
 			auto value = putAmericanOption(rs, rsigma, k, rr, rt, simulation);
 			return pmr::vector<Real>{ value, rs, rsigma, rr, rt };
 		};
