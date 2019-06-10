@@ -348,9 +348,6 @@ void hiho::ad25_exprump_tp_pclass_pzypmrmrk(double s, double sigma, double k, do
 			auto vega = hiho::newTimer([&]() {return value.d(rsigma); });
 			auto theta = hiho::newTimer([&]() {return value.d(rt); });
 
-			std::cout << math::repository->capacity << std::endl;
-			std::cout << math::repository->used << std::endl;
-
 			HIHO_IO_MAX_LEN_DOUBLE_LSHOW;
 			HIHO_IO_LEFT_COUT
 				<< HIHO_IO_FUNC_WIDTH << __func__ << " ( " << simulation << " )";
