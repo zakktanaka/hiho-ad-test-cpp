@@ -124,6 +124,77 @@ namespace {
 			}
 		};
 
+		struct DataRepository {
+			const static size_t bulk = 100000;
+			using Datum = Expression;
+
+			struct Element {
+				Element* next;
+				Datum* datum;
+			};
+
+			using Data = pmr::vector<Datum>;
+			using Elements = pmr::vector<Element>;
+
+			struct DataElement {
+				Elements elements;
+				Data data;
+			};
+
+			Element* remains;
+			Element* unassigned;
+			size_t capacity;
+			size_t used;
+			Datum defaultDatum;
+			pmr::vector<DataElement> reserved;
+
+			DataRepository() : remains { nullptr }, unassigned{ nullptr }, capacity{ 0 }, used{ 0 }, defaultDatum{ 0 }, reserved{} {};
+
+			void resize() {
+				reserved.emplace_back(DataElement{ Elements{bulk, Element{nullptr, nullptr}}, Data{bulk, defaultDatum} });
+				auto& elems = *std::rbegin(reserved);
+
+				auto current = &remains;
+				for (size_t i = 0; i < bulk; ++i) {
+					auto& elem = elems.elements[i];
+					*current = &elem;
+					current = &(elem.next);
+					elem.datum = &(elems.data[i]);
+				}
+
+				capacity += bulk;
+			}
+
+			Datum* datum() {
+				if (remains == nullptr) { resize(); }
+
+				auto current = remains;
+				remains = current->next;
+
+				auto d = current->datum;
+				current->datum = nullptr;
+
+				current->next = unassigned;
+				unassigned = current;
+
+				++used;
+				return d;
+			}
+
+			void dispose(Datum* datum) {
+				auto current = unassigned;
+				unassigned = current->next;
+
+				current->datum = datum;
+				current->next = remains;
+
+				remains = current;
+				--used;
+			}
+		};
+
+		DataRepository* repository;
+
 		struct INumber {
 			virtual ValueType  v() const = 0;
 			virtual ~INumber() {}
@@ -280,6 +351,9 @@ void hiho::ad25_exprump_tp_pclass_pzypmrmrk(double s, double sigma, double k, do
 	auto pm = pmr::unsynchronized_pool_resource();
 	pmr::set_default_resource(&pm);
 	{
+		math::DataRepository rep;
+		math::repository = &rep;
+
 		auto func = [&]() {
 			Real rs{ s };
 			Real rsigma{ sigma };
