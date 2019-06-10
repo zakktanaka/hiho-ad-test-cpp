@@ -15,113 +15,52 @@ namespace {
 
 	size_t indexer = 0;
 	using ValueType = double;
-	using Cache = pmr::unordered_map<size_t, ValueType>;
-
-	struct CountUp {
-		size_t& counter;
-		CountUp(size_t& c) : counter(c) {}
-		~CountUp() { ++counter; }
-	};
+	using Cache = pmr::unordered_map<const void*, ValueType>;
 
 	namespace math {
 
 		struct Expression {
-			using Term       = std::pair<ValueType, size_t>;
+			using ExprPtr = Expression*;
+			using Term       = std::pair<ValueType, ExprPtr>;
 			using Polynomial = pmr::vector<Term>;
 
-			static inline size_t counter = 0;
-			static inline pmr::vector<Expression> expressions{};
-
-			static size_t newExpression() { CountUp cp(counter); expressions.emplace_back(counter); return counter; }
-			static size_t newExpression(ValueType  cof, size_t  exp) { CountUp cp(counter); expressions.emplace_back(counter, cof, exp); return counter; }
-			static size_t newExpression(ValueType lcof, size_t lexp, ValueType rcof, size_t rexp) {
-				CountUp cp(counter);
-				expressions.emplace_back(counter, lcof, lexp, rcof, rexp);
-				return counter;
-			}
-			static Expression& getExpression(size_t index) {
-				return expressions[index];
-			}
-
 			size_t ref;
-			size_t index;
 			Polynomial polynomial;
 
-			Expression(size_t indx) : ref(0), index(indx), polynomial{} {}
-			Expression(size_t indx,
-				ValueType cof, size_t expr
-			) : ref(0), index(indx), polynomial{ {cof, expr} } {}
-			Expression(size_t indx,
-				ValueType lcof, size_t lhs,
-				ValueType rcof, size_t rhs
-			) : ref(0), index(indx), polynomial{ {lcof, lhs},{rcof, rhs} } {}
+			Expression() : ref(0), polynomial{} {}
 
 			void reference() { ++ref; }
 			void dreference() { --ref; }
 
 			ValueType d(const Expression& expr, Cache& cache) const {
-				if (index == expr.index) {
+				if (this == &expr) {
 					return 1;
 				}
 
-				auto it = cache.find(index);
+				auto it = cache.find(this);
 				if (it != std::end(cache)) {
 					return it->second;
 				}
 
 				ValueType dx = 0;
 				for (auto& term : polynomial) {
-					dx += term.first * getExpression(term.second).d(expr, cache);
+					dx += term.first * term.second->d(expr, cache);
 				}
-				cache[index] = dx;
+				cache[this] = dx;
 				return dx;
 			}
 
-			void addTerm(const Term& term) {
+			ExprPtr addTerm(const Term& term) {
 				for (auto& tm : polynomial) {
 					if (tm.second == term.second) {
 						tm.first += term.first;
-						return;
+						return this;
 					}
 				}
 				polynomial.emplace_back(term);
+				return this;
 			}
 
-			static void appendTerm(Polynomial& polynomial, const Term& term) {
-				for (auto& t : polynomial) {
-					if (t.second == term.second) {
-						t.first += term.first;
-						return;
-					}
-				}
-				polynomial.emplace_back(term);
-			}
-
-			void shrink() {
-				Polynomial newpoly;
-
-				for (auto& t0 : polynomial) {
-					auto& t0exp = getExpression(t0.second);
-					if (t0exp.ref != 0) {
-						appendTerm(newpoly, t0);
-					}
-					else {
-						for (auto& t1 : t0exp.polynomial) {
-							if (getExpression(t1.second).ref != 0) {
-								appendTerm(newpoly, { t0.first * t1.first, t1.second });
-							}
-						}
-					}
-				}
-
-				polynomial = std::move(newpoly);
-			}
-
-			static void shrinkExpressions() {
-				for (auto& expr : expressions) {
-					expr.shrink();
-				}
-			}
 		};
 
 		struct DataRepository {
@@ -148,7 +87,7 @@ namespace {
 			Datum defaultDatum;
 			pmr::vector<DataElement> reserved;
 
-			DataRepository() : remains { nullptr }, unassigned{ nullptr }, capacity{ 0 }, used{ 0 }, defaultDatum{ 0 }, reserved{} {};
+			DataRepository() : remains { nullptr }, unassigned{ nullptr }, capacity{ 0 }, used{ 0 }, defaultDatum{}, reserved{} {};
 
 			void resize() {
 				reserved.emplace_back(DataElement{ Elements{bulk, Element{nullptr, nullptr}}, Data{bulk, defaultDatum} });
@@ -185,6 +124,8 @@ namespace {
 				auto current = unassigned;
 				unassigned = current->next;
 
+				*datum = defaultDatum;
+
 				current->datum = datum;
 				current->next = remains;
 
@@ -194,6 +135,8 @@ namespace {
 		};
 
 		DataRepository* repository;
+
+		using ExprPtr = Expression*;
 
 		struct INumber {
 			virtual ValueType  v() const = 0;
@@ -238,16 +181,19 @@ namespace {
 
 		struct Number : public INumber {
 			ValueType  v_;
-			size_t expr_;
+			ExprPtr expr_;
 
-			Number(ValueType vv) : v_{ vv }, expr_{ Expression::newExpression() }  { expression().reference(); }
-			Number(ValueType vv, size_t expr) : v_{ vv }, expr_{ expr }  {expression().reference(); }
+			Number(ValueType vv) : v_{ vv }, expr_{ repository->datum() }  { expression().reference(); }
+			Number(ValueType vv, ExprPtr expr) : v_{ vv }, expr_{ expr }  {expression().reference(); }
 			Number(const Number& other) : v_{ other.v_ }, expr_{ other.expr_ } {expression().reference(); }
-			Number(const INumber& other) : v_{ other.v() }, expr_{ Expression::newExpression() } {
+			Number(const INumber& other) : v_{ other.v() }, expr_{ repository->datum() } {
 				expression().reference();
 				other.update(expression(), 1);
 			};
-			~Number() { expression().dreference(); }
+			~Number() { 
+				expression().dreference(); 
+				if (expression().ref == 0) { repository->dispose(expr_); }
+			}
 
 			ValueType v() const override { return v_; }
 			void update(Expression& updated, ValueType coef) const override {
@@ -259,21 +205,33 @@ namespace {
 				return expression().d(x.expression(), cache);
 			}
 
-			Expression& expression() const { return Expression::getExpression(expr_); }
+			Expression& expression() const { return *expr_; }
 
-			Number operator-() const { return Number{ -v_, Expression::newExpression(-1, expr_) }; }
+			Number operator-() const { return Number{ -v_, repository->datum()->addTerm({-1, expr_}) }; }
 			Number& operator=(const Number& other) {
+				if (this == &other) {
+					return *this;
+				}
+
+				Number newone{ other.v() };
+				other.update(newone.expression(), 1);
+				this->v_ = newone.v_;
 				this->expression().dreference();
-				this->v_ = other.v_;
-				this->expr_ = other.expr_;
+				if (this->expression().ref == 0) { repository->dispose(expr_); }
+				this->expr_ = newone.expr_;
 				this->expression().reference();
 				return *this;
 			}
 			Number& operator=(const INumber& other) {
-				this->expression().dreference();
+				if (this == &other) {
+					return *this;
+				}
+
 				Number newone{ other.v() };
 				other.update(newone.expression(), 1);
 				this->v_ = newone.v_;
+				this->expression().dreference();
+				if (this->expression().ref == 0) { repository->dispose(expr_); }
 				this->expr_ = newone.expr_;
 				this->expression().reference();
 				return *this;
@@ -348,8 +306,8 @@ namespace {
 void hiho::ad25_exprump_tp_pclass_pzypmrmrk(double s, double sigma, double k, double r, double t, int simulation)
 {
 	auto dfpm = pmr::get_default_resource();
-	auto pm = pmr::unsynchronized_pool_resource();
-	pmr::set_default_resource(&pm);
+	//auto pm = pmr::unsynchronized_pool_resource();
+	//pmr::set_default_resource(&pm);
 	{
 		math::DataRepository rep;
 		math::repository = &rep;
@@ -360,19 +318,11 @@ void hiho::ad25_exprump_tp_pclass_pzypmrmrk(double s, double sigma, double k, do
 			Real rr{ r };
 			Real rt{ t };
 			auto value = putAmericanOption(rs, rsigma, k, rr, rt, simulation);
-			math::Expression::shrinkExpressions();
 			return pmr::vector<Real>{ value, rs, rsigma, rr, rt };
-		};
-		auto postprocess = []() {
-			//auto c = 0; for (auto& e : math::Expression::expressions) { c += e.ref != 0 ? 1 : 0; }
-			//std::cout << math::Expression::counter << ", " << c << std::endl;
-
-			math::Expression::counter = 0;
-			math::Expression::expressions = {};
 		};
 
 		{
-			auto time = hiho::measureTime<3>(func, postprocess);
+			auto time = hiho::measureTime<3>(func);
 			auto vv = func();
 			auto& value = vv[0];
 			auto& rs = vv[1];
@@ -386,6 +336,9 @@ void hiho::ad25_exprump_tp_pclass_pzypmrmrk(double s, double sigma, double k, do
 			auto vega = hiho::newTimer([&]() {return value.d(rsigma); });
 			auto theta = hiho::newTimer([&]() {return value.d(rt); });
 
+			std::cout << math::repository->capacity << std::endl;
+			std::cout << math::repository->used << std::endl;
+
 			HIHO_IO_MAX_LEN_DOUBLE_LSHOW;
 			HIHO_IO_LEFT_COUT
 				<< HIHO_IO_FUNC_WIDTH << __func__ << " ( " << simulation << " )";
@@ -397,7 +350,6 @@ void hiho::ad25_exprump_tp_pclass_pzypmrmrk(double s, double sigma, double k, do
 				<< ", " << HIHO_IO_VALUE_TIME(theta)
 				<< std::endl;
 		}
-		postprocess();
 	}
 	pmr::set_default_resource(dfpm);
 }
