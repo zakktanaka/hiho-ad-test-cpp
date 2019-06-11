@@ -26,3 +26,4 @@
 #include "ad23_exprump_tpv_lazy_pmr_mrk.hpp"
 #include "ad24_exprv_tapv_lazy_pmr_mrk.hpp"
 #include "ad25_exprump_tp_pclass_pzypmrmrk.hpp"
+#include "ad26_dual_number.hpp"

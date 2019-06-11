@@ -36,6 +36,7 @@ int main(int argc, char* argv[]) {
 	FUNC( 23, ad23_exprump_tpv_lazy_pmr_mrk   (100, 0.2, 100, 0.005, 3, 1000));
 	FUNC( 24, ad24_exprv_tapv_lazy_pmr_mrk    (100, 0.2, 100, 0.005, 3, 1000));
 	FUNC( 25, ad25_exprump_tp_pclass_pzypmrmrk(100, 0.2, 100, 0.005, 3, 1000));
+	FUNC( 26, ad26_dual_number                (100, 0.2, 100, 0.005, 3, 1000));
 
 	FUNC(300, ad00_primitive_double           (100, 0.2, 100, 0.005, 3, 3000));
 	FUNC(308, ad08_expr_vec_tape_vec_cache    (100, 0.2, 100, 0.005, 3, 3000));
@@ -56,4 +57,5 @@ int main(int argc, char* argv[]) {
 	//FUNC(323, ad23_exprump_tpv_lazy_pmr_mrk   (100, 0.2, 100, 0.005, 3, 3000)); // too late
 	FUNC(324, ad24_exprv_tapv_lazy_pmr_mrk    (100, 0.2, 100, 0.005, 3, 3000));
 	FUNC(325, ad25_exprump_tp_pclass_pzypmrmrk(100, 0.2, 100, 0.005, 3, 3000));
+	FUNC(326, ad26_dual_number                (100, 0.2, 100, 0.005, 3, 3000));
 }
