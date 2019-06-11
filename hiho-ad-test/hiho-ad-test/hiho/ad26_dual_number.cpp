@@ -20,19 +20,16 @@ namespace {
 	namespace math {
 
 		struct Expression {
-			using ExprPtr = Expression *;
+			using ExprPtr = const Expression *;
 			using Term       = std::pair<ValueType, ExprPtr>;
 			using Polynomial = pmr::vector<Term>;
 
 			bool marked;
-			size_t ref;
 			Polynomial polynomial;
 
-			Expression() : marked{ false }, ref(0), polynomial{} {}
-
+			Expression() : marked{ false }, polynomial{} {}
+			Expression(ValueType v, ExprPtr expr) : marked{ false }, polynomial{ {v, expr} } {}
 			void mark() { marked = true; }
-			void reference() { ++ref; }
-			void dreference() { --ref; }
 
 			ValueType d(const Expression& expr, Cache& cache) const {
 				if (this == &expr) {
@@ -73,81 +70,6 @@ namespace {
 			}
 
 		};
-
-		struct DataRepository {
-			const static size_t bulk = 100000;
-			using Datum = Expression;
-
-			struct Element {
-				Element* next;
-				Datum* datum;
-			};
-
-			using Data = pmr::vector<Datum>;
-			using Elements = pmr::vector<Element>;
-
-			struct DataElement {
-				Elements elements;
-				Data data;
-			};
-
-			Element* remains;
-			Element* unassigned;
-			size_t capacity;
-			size_t used;
-			Datum defaultDatum;
-			pmr::vector<DataElement> reserved;
-
-			DataRepository() : remains{ nullptr }, unassigned{ nullptr }, capacity{ 0 }, used{ 0 }, defaultDatum{}, reserved{} {};
-
-			void resize() {
-				reserved.emplace_back(DataElement{ Elements{bulk, Element{nullptr, nullptr}}, Data{bulk, defaultDatum} });
-				auto& elems = *std::rbegin(reserved);
-
-				auto current = &remains;
-				for (size_t i = 0; i < bulk; ++i) {
-					auto& elem = elems.elements[i];
-					*current = &elem;
-					current = &(elem.next);
-					elem.datum = &(elems.data[i]);
-				}
-
-				capacity += bulk;
-			}
-
-			Datum* datum() {
-				if (remains == nullptr) { resize(); }
-
-				auto current = remains;
-				remains = current->next;
-
-				auto d = current->datum;
-				current->datum = nullptr;
-
-				current->next = unassigned;
-				unassigned = current;
-
-				++used;
-				return d;
-			}
-
-			void dispose(Datum* datum) {
-				auto current = unassigned;
-				unassigned = current->next;
-
-				*datum = defaultDatum;
-
-				current->datum = datum;
-				current->next = remains;
-
-				remains = current;
-				--used;
-			}
-		};
-
-		DataRepository* repository;
-
-		using ExprPtr = Expression *;
 
 		struct INumber {
 			virtual ValueType  v() const = 0;
@@ -192,47 +114,38 @@ namespace {
 
 		struct Number : public INumber {
 			ValueType  v_;
-			ExprPtr expr_;
+			Expression expr_;
 
-			Number(ValueType vv) : v_{ vv }, expr_{ repository->datum() }  { expression().reference(); }
-			Number(ValueType vv, ExprPtr expr) : v_{ vv }, expr_{ expr }  {expression().reference(); }
-			Number(const Number& other) : v_{ other.v_ }, expr_{ other.expr_ } {expression().reference(); }
-			Number(const INumber& other) : v_{ other.v() }, expr_{ repository->datum() } {
-				expression().reference();
-				other.update(expression(), 1);
+			Number(ValueType vv) : v_{ vv }, expr_{ }  { }
+			Number(ValueType vv, const Expression& expr) : v_{ vv }, expr_{ expr } { }
+			Number(const Number& other) : v_{ other.v_ }, expr_{ other.expr_ } { }
+			Number(const INumber& other) : v_{ other.v() }, expr_{} {
+				other.update(expr_, 1);
 			};
-			~Number() {
-				expression().dreference();
-				if (expression().ref == 0) { repository->dispose(expr_); }
-			}
+			~Number() { }
 
-			void mark() { expression().mark(); }
+			void mark() { expr_.mark(); }
 
 			ValueType v() const override { return v_; }
 			void update(Expression& updated, ValueType coef) const override {
-				updated.addTerm({ coef, expr_ });
+				updated.addTerm({ coef, &expr_ });
 			}
 
 			ValueType d(const Number& x) const {
 				Cache cache;
-				return expression().d(x.expression(), cache);
+				return expr_.d(x.expr_, cache);
 			}
 
-			Expression& expression() const { return *expr_; }
-
-			Number operator-() const { return Number{ -v_, repository->datum()->addTerm({-1, expr_}) }; }
+			Number operator-() const { return Number{ -v_, {-1, &expr_} }; }
 			Number& operator=(const Number& other) {
 				if (this == &other) {
 					return *this;
 				}
 
 				Number newone{ other.v() };
-				other.update(newone.expression(), 1);
+				other.update(newone.expr_, 1);
 				this->v_ = newone.v_;
-				this->expression().dreference();
-				if (this->expression().ref == 0) { repository->dispose(expr_); }
 				this->expr_ = newone.expr_;
-				this->expression().reference();
 				return *this;
 			}
 			Number& operator=(const INumber& other) {
@@ -241,12 +154,9 @@ namespace {
 				}
 
 				Number newone{ other.v() };
-				other.update(newone.expression(), 1);
+				other.update(newone.expr_, 1);
 				this->v_ = newone.v_;
-				this->expression().dreference();
-				if (this->expression().ref == 0) { repository->dispose(expr_); }
 				this->expr_ = newone.expr_;
-				this->expression().reference();
 				return *this;
 			}
 		};
@@ -322,9 +232,6 @@ void hiho::ad26_dual_number(double s, double sigma, double k, double r, double t
 	auto pm = pmr::unsynchronized_pool_resource();
 	pmr::set_default_resource(&pm);
 	{
-		math::DataRepository rep;
-		math::repository = &rep;
-
 		auto func = [&]() {
 			Real rs{ s }; rs.mark();
 			Real rsigma{ sigma }; rsigma.mark();
@@ -345,9 +252,9 @@ void hiho::ad26_dual_number(double s, double sigma, double k, double r, double t
 
 			auto diff = value.v() - hiho::american(s, sigma, k, r, t, simulation);
 
-			auto delta = hiho::newTimer([&]() {return value.d(rs); });
-			auto vega = hiho::newTimer([&]() {return value.d(rsigma); });
-			auto theta = hiho::newTimer([&]() {return value.d(rt); });
+			//auto delta = hiho::newTimer([&]() {return value.d(rs); });
+			//auto vega = hiho::newTimer([&]() {return value.d(rsigma); });
+			//auto theta = hiho::newTimer([&]() {return value.d(rt); });
 
 			HIHO_IO_MAX_LEN_DOUBLE_LSHOW;
 			HIHO_IO_LEFT_COUT
@@ -355,9 +262,9 @@ void hiho::ad26_dual_number(double s, double sigma, double k, double r, double t
 			HIHO_IO_RIGHT_COUT
 				<< ", " << HIHO_IO_VALUE(diff)
 				<< ", " << HIHO_IO_TIME(time)
-				<< ", " << HIHO_IO_VALUE_TIME(delta)
-				<< ", " << HIHO_IO_VALUE_TIME(vega)
-				<< ", " << HIHO_IO_VALUE_TIME(theta)
+				//<< ", " << HIHO_IO_VALUE_TIME(delta)
+				//<< ", " << HIHO_IO_VALUE_TIME(vega)
+				//<< ", " << HIHO_IO_VALUE_TIME(theta)
 				<< std::endl;
 		}
 	}
