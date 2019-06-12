@@ -38,6 +38,8 @@ int main(int argc, char* argv[]) {
 	FUNC( 25, ad25_exprump_tp_pclass_pzypmrmrk(100, 0.2, 100, 0.005, 3, 1000));
 	FUNC( 26, ad26_dual_number                (100, 0.2, 100, 0.005, 3, 1000));
 	FUNC( 27, ad27_dual_number2               (100, 0.2, 100, 0.005, 3, 1000));
+	FUNC( 28, ad28_struct_with_empty_umap     (100, 0.2, 100, 0.005, 3, 1000));
+	FUNC( 29, ad29_struct_with_empty_map      (100, 0.2, 100, 0.005, 3, 1000));
 
 	FUNC(300, ad00_primitive_double           (100, 0.2, 100, 0.005, 3, 3000));
 	FUNC(308, ad08_expr_vec_tape_vec_cache    (100, 0.2, 100, 0.005, 3, 3000));

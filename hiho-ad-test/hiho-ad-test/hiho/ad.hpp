@@ -28,3 +28,5 @@
 #include "ad25_exprump_tp_pclass_pzypmrmrk.hpp"
 #include "ad26_dual_number.hpp"
 #include "ad27_dual_number2.hpp"
+#include "ad28_struct_with_empty_umap.hpp"
+#include "ad29_struct_with_empty_map.hpp"
