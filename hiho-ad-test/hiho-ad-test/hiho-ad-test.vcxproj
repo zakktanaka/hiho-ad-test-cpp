@@ -154,6 +154,7 @@
     <ClCompile Include="hiho\ad24_exprv_tapv_lazy_pmr_mrk.cpp" />
     <ClCompile Include="hiho\ad25_exprump_tp_pclass_pzypmrmrk.cpp" />
     <ClCompile Include="hiho\ad26_dual_number.cpp" />
+    <ClCompile Include="hiho\ad27_dual_number2.cpp" />
     <ClCompile Include="hiho\ad_american.cpp" />
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
@@ -185,6 +186,7 @@
     <ClInclude Include="hiho\ad24_exprv_tapv_lazy_pmr_mrk.hpp" />
     <ClInclude Include="hiho\ad25_exprump_tp_pclass_pzypmrmrk.hpp" />
     <ClInclude Include="hiho\ad26_dual_number.hpp" />
+    <ClInclude Include="hiho\ad27_dual_number2.hpp" />
     <ClInclude Include="hiho\ad_american.hpp" />
     <ClInclude Include="hiho\ad21_exprump_tpv_lazy_pmr_shrnk.hpp" />
     <ClInclude Include="hiho\iohelper.hpp" />
