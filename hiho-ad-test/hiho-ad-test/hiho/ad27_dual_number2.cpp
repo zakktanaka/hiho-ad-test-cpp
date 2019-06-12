@@ -65,13 +65,15 @@ namespace {
 			ValueType  v_;
 			Differentials differentials_;
 
-			Number() : id_{ indexer++ }, v_{ 0 }, differentials_{}  {}
-			Number(ValueType vv) : id_{ indexer++ }, v_{ vv }, differentials_{}  { differentials_[id_] = 1; }
+			Number() : id_{ 0 }, v_{ 0 }, differentials_{} {}
+			Number(ValueType vv) : id_{ 0 }, v_{ vv }, differentials_{} {}
 			Number(const Number&) = default;
 			Number(Number&&) noexcept = default;
-			Number(const INumber& other) : id_{ indexer++ }, v_{ other.v() }, differentials_{} {
+			Number(const INumber& other) : id_{ 0 }, v_{ other.v() }, differentials_{} {
 				other.update(differentials_, 1);
 			};
+
+			void mark() { id_ = ++indexer; differentials_[id_] = 1; }
 
 			ValueType v() const override { return v_; }
 			void update(Differentials& updated, ValueType coef) const override {
@@ -79,14 +81,14 @@ namespace {
 					auto it = updated.find(p.first);
 					if (it != std::end(updated)) {
 						it->second += coef * p.second;
-					}
-					else {
+					} else {
 						updated[p.first] = coef * p.second;
 					}
 				}
 			}
 
-			Number& update(ValueType coef) {
+			Number& multify(ValueType coef) {
+				v_ *= -1;
 				for (auto& p : differentials_) {
 					p.second *= coef;
 				}
@@ -103,7 +105,7 @@ namespace {
 				}
 			}
 
-			Number operator-() const { return Number{ *this }.update(-1); }
+			Number operator-() const { return Number{ *this }.multify(-1); }
 			Number& operator=(Number&&) = default;
 			Number& operator=(const Number& other) {
 				if (this == &other) {
@@ -198,26 +200,19 @@ void hiho::ad27_dual_number2(double s, double sigma, double k, double r, double 
 	auto pm = pmr::unsynchronized_pool_resource();
 	pmr::set_default_resource(&pm);
 	{
+		Real rs{ s }; rs.mark();
+		Real rsigma{ sigma }; rsigma.mark();
+		Real rr{ r }; rr.mark();
+		Real rt{ t }; rt.mark();
+
 		auto func = [&]() {
-			Real rs{ s };
-			Real rsigma{ sigma };
-			Real rr{ r };
-			Real rt{ t };
-			auto value = putAmericanOption(rs, rsigma, k, rr, rt, simulation);
-			return pmr::vector<Real>{ value, rs, rsigma, rr, rt };
+			return putAmericanOption(rs, rsigma, k, rr, rt, simulation);
 		};
 
 		{
 			auto time = hiho::measureTime<1>(func);
-			auto vv = func();
-			auto& value = vv[0];
-			auto& rs = vv[1];
-			auto& rsigma = vv[2];
-			auto& rr = vv[3];
-			auto& rt = vv[4];
-
+			auto value = func();
 			auto diff = value.v() - hiho::american(s, sigma, k, r, t, simulation);
-
 			auto delta = hiho::newTimer([&]() {return value.d(rs); });
 			auto vega = hiho::newTimer([&]() {return value.d(rsigma); });
 			auto theta = hiho::newTimer([&]() {return value.d(rt); });

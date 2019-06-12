@@ -59,5 +59,5 @@ int main(int argc, char* argv[]) {
 	FUNC(324, ad24_exprv_tapv_lazy_pmr_mrk    (100, 0.2, 100, 0.005, 3, 3000));
 	FUNC(325, ad25_exprump_tp_pclass_pzypmrmrk(100, 0.2, 100, 0.005, 3, 3000));
 	FUNC(326, ad26_dual_number                (100, 0.2, 100, 0.005, 3, 3000));
-	FUNC(327, ad27_dual_number2               (100, 0.2, 100, 0.005, 3, 3000));
+	//FUNC(327, ad27_dual_number2               (100, 0.2, 100, 0.005, 3, 3000)); // too late 
 }
