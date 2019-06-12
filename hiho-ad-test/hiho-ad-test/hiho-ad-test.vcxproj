@@ -157,6 +157,7 @@
     <ClCompile Include="hiho\ad27_dual_number2.cpp" />
     <ClCompile Include="hiho\ad28_struct_with_empty_umap.cpp" />
     <ClCompile Include="hiho\ad29_struct_with_empty_map.cpp" />
+    <ClCompile Include="hiho\ad30_dual_number3.cpp" />
     <ClCompile Include="hiho\ad_american.cpp" />
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
@@ -191,6 +192,7 @@
     <ClInclude Include="hiho\ad26_dual_number.hpp" />
     <ClInclude Include="hiho\ad27_dual_number2.hpp" />
     <ClInclude Include="hiho\ad29_struct_with_empty_map.hpp" />
+    <ClInclude Include="hiho\ad30_dual_number3.hpp" />
     <ClInclude Include="hiho\ad_american.hpp" />
     <ClInclude Include="hiho\ad21_exprump_tpv_lazy_pmr_shrnk.hpp" />
     <ClInclude Include="hiho\iohelper.hpp" />
