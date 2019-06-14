@@ -18,8 +18,9 @@ namespace {
 
 	namespace math {
 
-		struct Expression {
-			using ExprPtr = Expression *;
+		class Expression {
+		private:
+			using ExprPtr    = Expression*;
 			using Term       = std::pair<ExprPtr, ValueType>;
 			using Polynomial = pmr::vector<Term>;
 
@@ -27,14 +28,21 @@ namespace {
 			size_t ref;
 			Polynomial polynomial;
 
+		public:
 			Expression() : marked{ false }, ref(0), polynomial{} {}
+			Expression(const Expression&) = default;
+			Expression(Expression&&)      = default;
+			
+			Expression& operator=(const Expression&) = default;
+			Expression& operator=(Expression&&)      = default;
 
-			void mark() { marked = true; }
-			void reference() { ++ref; }
-			void dreference() { --ref; }
+			void mark       () { marked = true; }
+			void reference  () { ++ref; }
+			void dereference() { --ref; }
+			bool referred   () const { return ref != 0; }
 
-			ValueType d(const Expression& expr, Cache& cache) const {
-				if (this == &expr) {
+			ValueType d(const ExprPtr expr, Cache& cache) const {
+				if (this == expr) {
 					return 1;
 				}
 
@@ -48,27 +56,26 @@ namespace {
 					dx += term.second * term.first->d(expr, cache);
 				}
 				cache[this] = dx;
+				
 				return dx;
 			}
 
-			ExprPtr addTerm(const Term& term) {
-				if (term.first->marked) {
+			ExprPtr addTerm(const ExprPtr expr, ValueType coef) {
+				if (expr->marked) {
 					for (auto& tm : polynomial) {
-						if (tm.first == term.first) {
-							tm.second += term.second;
+						if (tm.first == expr) {
+							tm.second += coef;
 							return this;
 						}
 					}
-					polynomial.emplace_back(term);
+					polynomial.emplace_back(expr, coef);
 					return this;
-				}
-				else {
-					for (auto& tt : term.first->polynomial) {
-						addTerm({ tt.first, term.second * tt.second });
+				} else {
+					for (auto& tt : expr->polynomial) {
+						addTerm( tt.first, coef * tt.second);
 					}
 					return this;
 				}
-
 			}
 
 		};
@@ -201,25 +208,25 @@ namespace {
 				other.update(expression(), 1);
 			};
 			~Number() {
-				expression().dreference();
-				if (expression().ref == 0) { repository->dispose(expr_); }
+				expression().dereference();
+				if (!expression().referred()) { repository->dispose(expr_); }
 			}
 
 			void mark() { expression().mark(); }
 
 			ValueType v() const override { return v_; }
 			void update(Expression& updated, ValueType coef) const override {
-				updated.addTerm({ expr_, coef });
+				updated.addTerm(expr_, coef);
 			}
 
 			ValueType d(const Number& x) const {
 				Cache cache;
-				return expression().d(x.expression(), cache);
+				return expression().d(x.expr_, cache);
 			}
 
 			Expression& expression() const { return *expr_; }
 
-			Number operator-() const { return Number{ -v_, repository->datum()->addTerm({expr_, -1}) }; }
+			Number operator-() const { return Number{ -v_, repository->datum()->addTerm(expr_, -1) }; }
 			Number& operator=(const Number& other) {
 				if (this == &other) {
 					return *this;
@@ -228,8 +235,8 @@ namespace {
 				Number newone{ other.v() };
 				other.update(newone.expression(), 1);
 				this->v_ = newone.v_;
-				this->expression().dreference();
-				if (this->expression().ref == 0) { repository->dispose(expr_); }
+				this->expression().dereference();
+				if (!expression().referred()) { repository->dispose(expr_); }
 				this->expr_ = newone.expr_;
 				this->expression().reference();
 				return *this;
@@ -242,8 +249,8 @@ namespace {
 				Number newone{ other.v() };
 				other.update(newone.expression(), 1);
 				this->v_ = newone.v_;
-				this->expression().dreference();
-				if (this->expression().ref == 0) { repository->dispose(expr_); }
+				this->expression().dereference();
+				if (!expression().referred()) { repository->dispose(expr_); }
 				this->expr_ = newone.expr_;
 				this->expression().reference();
 				return *this;
