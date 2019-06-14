@@ -41,6 +41,7 @@ int main(int argc, char* argv[]) {
 	FUNC( 28, ad28_struct_with_empty_umap     (100, 0.2, 100, 0.005, 3, 1000));
 	FUNC( 29, ad29_struct_with_empty_map      (100, 0.2, 100, 0.005, 3, 1000));
 	FUNC( 30, ad30_dual_number3               (100, 0.2, 100, 0.005, 3, 1000));
+	FUNC( 31, ad31_exprvec_classic_pzypmrmrk  (100, 0.2, 100, 0.005, 3, 1000));
 
 	FUNC(300, ad00_primitive_double           (100, 0.2, 100, 0.005, 3, 3000));
 	FUNC(308, ad08_expr_vec_tape_vec_cache    (100, 0.2, 100, 0.005, 3, 3000));
@@ -60,7 +61,8 @@ int main(int argc, char* argv[]) {
 	FUNC(322, ad22_expr_umap_shrd_mrk_pmr     (100, 0.2, 100, 0.005, 3, 3000));
 	//FUNC(323, ad23_exprump_tpv_lazy_pmr_mrk   (100, 0.2, 100, 0.005, 3, 3000)); // too late
 	FUNC(324, ad24_exprv_tapv_lazy_pmr_mrk    (100, 0.2, 100, 0.005, 3, 3000));
-	FUNC(325, ad25_exprump_tp_pclass_pzypmrmrk(100, 0.2, 100, 0.005, 3, 3000));
+	//FUNC(325, ad25_exprump_tp_pclass_pzypmrmrk(100, 0.2, 100, 0.005, 3, 3000)); 
 	FUNC(326, ad26_dual_number                (100, 0.2, 100, 0.005, 3, 3000));
 	//FUNC(327, ad27_dual_number2               (100, 0.2, 100, 0.005, 3, 3000)); // too late 
+	FUNC(331, ad31_exprvec_classic_pzypmrmrk  (100, 0.2, 100, 0.005, 3, 3000));
 }

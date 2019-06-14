@@ -1,4 +1,4 @@
-#include "ad25_exprump_tp_pclass_pzypmrmrk.hpp"
+#include "ad31_exprvec_classic_pzypmrmrk.hpp"
 
 #include <cmath>
 #include <utility>
@@ -20,14 +20,15 @@ namespace {
 	namespace math {
 
 		struct Expression {
-			using ExprPtr = Expression*;
-			using Polynomial = pmr::unordered_map<ExprPtr, ValueType>;
+			using ExprPtr = Expression *;
+			using Term       = std::pair<ValueType, ExprPtr>;
+			using Polynomial = pmr::vector<Term>;
 
 			bool marked;
 			size_t ref;
 			Polynomial polynomial;
 
-			Expression() : marked{false}, ref(0), polynomial{} {}
+			Expression() : marked{ false }, ref(0), polynomial{} {}
 
 			void mark() { marked = true; }
 			void reference() { ++ref; }
@@ -45,24 +46,26 @@ namespace {
 
 				ValueType dx = 0;
 				for (auto& term : polynomial) {
-					dx += term.second * term.first->d(expr, cache);
+					dx += term.first * term.second->d(expr, cache);
 				}
 				cache[this] = dx;
 				return dx;
 			}
 
-			ExprPtr addTerm(ExprPtr expr, ValueType coef) {
-				if (expr->marked) {
-					auto it = polynomial.find(expr);
-					if (it != std::end(polynomial)) {
-						it->second += coef;
-						return this;
+			ExprPtr addTerm(const Term& term) {
+				if (term.second->marked) {
+					for (auto& tm : polynomial) {
+						if (tm.second == term.second) {
+							tm.first += term.first;
+							return this;
+						}
 					}
-					polynomial[expr] = coef;
+					polynomial.emplace_back(term);
 					return this;
-				} else {
-					for (auto& tt : expr->polynomial) {
-						addTerm(tt.first, coef * tt.second);
+				}
+				else {
+					for (auto& tt : term.second->polynomial) {
+						addTerm({ term.first * tt.first, tt.second });
 					}
 					return this;
 				}
@@ -95,7 +98,7 @@ namespace {
 			Datum defaultDatum;
 			pmr::vector<DataElement> reserved;
 
-			DataRepository() : remains { nullptr }, unassigned{ nullptr }, capacity{ 0 }, used{ 0 }, defaultDatum{}, reserved{} {};
+			DataRepository() : remains{ nullptr }, unassigned{ nullptr }, capacity{ 0 }, used{ 0 }, defaultDatum{}, reserved{} {};
 
 			void resize() {
 				reserved.emplace_back(DataElement{ Elements{bulk, Element{nullptr, nullptr}}, Data{bulk, defaultDatum} });
@@ -144,7 +147,7 @@ namespace {
 
 		DataRepository* repository;
 
-		using ExprPtr = Expression*;
+		using ExprPtr = Expression *;
 
 		struct INumber {
 			virtual ValueType  v() const = 0;
@@ -198,8 +201,8 @@ namespace {
 				expression().reference();
 				other.update(expression(), 1);
 			};
-			~Number() { 
-				expression().dreference(); 
+			~Number() {
+				expression().dreference();
 				if (expression().ref == 0) { repository->dispose(expr_); }
 			}
 
@@ -207,7 +210,7 @@ namespace {
 
 			ValueType v() const override { return v_; }
 			void update(Expression& updated, ValueType coef) const override {
-				updated.addTerm(expr_, coef);
+				updated.addTerm({ coef, expr_ });
 			}
 
 			ValueType d(const Number& x) const {
@@ -217,7 +220,7 @@ namespace {
 
 			Expression& expression() const { return *expr_; }
 
-			Number operator-() const { return Number{ -v_, repository->datum()->addTerm( expr_, -1) }; }
+			Number operator-() const { return Number{ -v_, repository->datum()->addTerm({-1, expr_}) }; }
 			Number& operator=(const Number& other) {
 				if (this == &other) {
 					return *this;
@@ -313,7 +316,7 @@ namespace {
 	}
 }
 
-void hiho::ad25_exprump_tp_pclass_pzypmrmrk(double s, double sigma, double k, double r, double t, int simulation)
+void hiho::ad31_exprvec_classic_pzypmrmrk(double s, double sigma, double k, double r, double t, int simulation)
 {
 	auto dfpm = pmr::get_default_resource();
 	auto pm = pmr::unsynchronized_pool_resource();
