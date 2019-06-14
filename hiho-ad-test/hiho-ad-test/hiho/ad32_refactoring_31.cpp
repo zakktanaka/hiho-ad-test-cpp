@@ -13,7 +13,6 @@ namespace {
 
 	namespace pmr = std::pmr;
 
-	size_t indexer = 0;
 	using ValueType = double;
 	using Cache = pmr::unordered_map<const void*, ValueType>;
 
@@ -21,7 +20,7 @@ namespace {
 
 		struct Expression {
 			using ExprPtr = Expression *;
-			using Term       = std::pair<ValueType, ExprPtr>;
+			using Term       = std::pair<ExprPtr, ValueType>;
 			using Polynomial = pmr::vector<Term>;
 
 			bool marked;
@@ -46,17 +45,17 @@ namespace {
 
 				ValueType dx = 0;
 				for (auto& term : polynomial) {
-					dx += term.first * term.second->d(expr, cache);
+					dx += term.second * term.first->d(expr, cache);
 				}
 				cache[this] = dx;
 				return dx;
 			}
 
 			ExprPtr addTerm(const Term& term) {
-				if (term.second->marked) {
+				if (term.first->marked) {
 					for (auto& tm : polynomial) {
-						if (tm.second == term.second) {
-							tm.first += term.first;
+						if (tm.first == term.first) {
+							tm.second += term.second;
 							return this;
 						}
 					}
@@ -64,8 +63,8 @@ namespace {
 					return this;
 				}
 				else {
-					for (auto& tt : term.second->polynomial) {
-						addTerm({ term.first * tt.first, tt.second });
+					for (auto& tt : term.first->polynomial) {
+						addTerm({ tt.first, term.second * tt.second });
 					}
 					return this;
 				}
@@ -210,7 +209,7 @@ namespace {
 
 			ValueType v() const override { return v_; }
 			void update(Expression& updated, ValueType coef) const override {
-				updated.addTerm({ coef, expr_ });
+				updated.addTerm({ expr_, coef });
 			}
 
 			ValueType d(const Number& x) const {
@@ -220,7 +219,7 @@ namespace {
 
 			Expression& expression() const { return *expr_; }
 
-			Number operator-() const { return Number{ -v_, repository->datum()->addTerm({-1, expr_}) }; }
+			Number operator-() const { return Number{ -v_, repository->datum()->addTerm({expr_, -1}) }; }
 			Number& operator=(const Number& other) {
 				if (this == &other) {
 					return *this;
