@@ -60,7 +60,7 @@ namespace {
 				return dx;
 			}
 
-			ExprPtr addTerm(const ExprPtr expr, ValueType coef) noexcept {
+			ExprPtr append(const ExprPtr expr, ValueType coef) noexcept {
 				if (expr->marked) {
 					for (auto& tm : polynomial) {
 						if (tm.first == expr) {
@@ -72,7 +72,7 @@ namespace {
 					return this;
 				} else {
 					for (auto& tt : expr->polynomial) {
-						addTerm( tt.first, coef * tt.second);
+						append( tt.first, coef * tt.second);
 					}
 					return this;
 				}
@@ -216,7 +216,7 @@ namespace {
 
 			ValueType v() const override { return v_; }
 			void update(Expression& updated, ValueType coef) const override {
-				updated.addTerm(expr_, coef);
+				updated.append(expr_, coef);
 			}
 
 			ValueType d(const Number& x) const {
@@ -226,7 +226,7 @@ namespace {
 
 			Expression& expression() const { return *expr_; }
 
-			Number operator-() const { return Number{ -v_, repository->datum()->addTerm(expr_, -1) }; }
+			Number operator-() const { return Number{ -v_, repository->datum()->append(expr_, -1) }; }
 			Number& operator=(const Number& other) {
 				if (this == &other) {
 					return *this;
