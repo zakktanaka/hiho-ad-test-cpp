@@ -203,25 +203,27 @@ namespace {
 			}
 		};
 
-		struct Number : public INumber {
+		class Number : public INumber {
+		private:
 			ValueType  v_;
 			ExprPtr expr_;
 
-			Number(ValueType vv, ExprPtr expr) : v_{ vv },  expr_{ expr } { reference(); }
-			Number(ValueType vv) :         Number{ vv ,       repository->getDatum() } { }
-			Number(const  Number& other) : Number{ other.v_ , other.expr_ }            { }
-			Number(const INumber& other) : Number{ other.v(), repository->getDatum() } { other.update(expr_, 1); }
-			~Number() { dereference();}
-
-			void reference()   { expr_->reference(); }
-			void dereference() { 
+			void reference() { expr_->reference(); }
+			void dereference() {
 				expr_->dereference();
 				if (!expr_->referred()) {
 					repository->returnBack(expr_);
 				}
 			}
 
-			void mark() { expression().mark(); }
+		public:
+			Number(ValueType vv, ExprPtr expr) : v_{ vv },  expr_{ expr } { reference(); }
+			Number(ValueType vv) :         Number{ vv ,       repository->getDatum() } { }
+			Number(const  Number& other) : Number{ other.v_ , other.expr_ }            { }
+			Number(const INumber& other) : Number{ other.v(), repository->getDatum() } { other.update(expr_, 1); }
+			~Number() { dereference();}
+
+			void mark() { expr_->mark(); }
 
 			ValueType v() const override { return v_; }
 			void update(ExprPtr updated, ValueType coef) const override {
@@ -230,10 +232,8 @@ namespace {
 
 			ValueType d(const Number& x) const {
 				Cache cache;
-				return expression().d(x.expr_, cache);
+				return expr_->d(x.expr_, cache);
 			}
-
-			Expression& expression() const { return *expr_; }
 
 			Number operator-() const {
 				auto expr = repository->getDatum();
@@ -241,6 +241,7 @@ namespace {
 
 				return Number { -v_, expr }; 
 			}
+
 			Number& operator=(const Number& other) {
 				if (this == &other) {
 					return *this;
@@ -256,6 +257,7 @@ namespace {
 				
 				return *this;
 			}
+
 			Number& operator=(const INumber& other) {
 				if (this == &other) {
 					return *this;
