@@ -43,6 +43,7 @@ int main(int argc, char* argv[]) {
 	FUNC( 30, ad30_dual_number3               (100, 0.2, 100, 0.005, 3, 1000));
 	FUNC( 31, ad31_exprvec_classic_pzypmrmrk  (100, 0.2, 100, 0.005, 3, 1000));
 	FUNC( 32, ad32_refactoring_31             (100, 0.2, 100, 0.005, 3, 1000));
+	FUNC( 33, ad33_template                   (100, 0.2, 100, 0.005, 3, 1000));
 
 	FUNC(300, ad00_primitive_double           (100, 0.2, 100, 0.005, 3, 3000));
 	FUNC(308, ad08_expr_vec_tape_vec_cache    (100, 0.2, 100, 0.005, 3, 3000));
@@ -67,4 +68,5 @@ int main(int argc, char* argv[]) {
 	//FUNC(327, ad27_dual_number2               (100, 0.2, 100, 0.005, 3, 3000)); // too late 
 	FUNC(331, ad31_exprvec_classic_pzypmrmrk  (100, 0.2, 100, 0.005, 3, 3000));
 	FUNC(332, ad32_refactoring_31             (100, 0.2, 100, 0.005, 3, 3000));
+	FUNC(333, ad33_template                   (100, 0.2, 100, 0.005, 3, 3000));
 }
