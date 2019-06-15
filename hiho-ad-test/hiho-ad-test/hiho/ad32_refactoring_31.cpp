@@ -62,21 +62,19 @@ namespace {
 				return dx;
 			}
 
-			ExprPtr append(const ExprPtr expr, ValueType coef) {
+			void append(const ExprPtr expr, ValueType coef) {
 				if (expr->marked) {
 					for (auto& tm : polynomial) {
 						if (tm.first == expr) {
 							tm.second += coef;
-							return this;
+							return;
 						}
 					}
 					polynomial.emplace_back(expr, coef);
-					return this;
 				} else {
 					for (auto& tt : expr->polynomial) {
 						append( tt.first, coef * tt.second);
 					}
-					return this;
 				}
 			}
 
@@ -209,16 +207,18 @@ namespace {
 			ValueType  v_;
 			ExprPtr expr_;
 
-			Number(ValueType vv) : v_{ vv }, expr_{ repository->getDatum() }  { expression().reference(); }
-			Number(ValueType vv, ExprPtr expr) : v_{ vv }, expr_{ expr }  {expression().reference(); }
-			Number(const Number& other) : v_{ other.v_ }, expr_{ other.expr_ } {expression().reference(); }
-			Number(const INumber& other) : v_{ other.v() }, expr_{ repository->getDatum() } {
-				expression().reference();
-				other.update(expr_, 1);
-			};
-			~Number() {
-				expression().dereference();
-				if (!expression().referred()) { repository->returnBack(expr_); }
+			Number(ValueType vv, ExprPtr expr) : v_{ vv },  expr_{ expr } { reference(); }
+			Number(ValueType vv) :         Number{ vv ,       repository->getDatum() } { }
+			Number(const  Number& other) : Number{ other.v_ , other.expr_ }            { }
+			Number(const INumber& other) : Number{ other.v(), repository->getDatum() } { other.update(expr_, 1); }
+			~Number() { dereference();}
+
+			void reference()   { expr_->reference(); }
+			void dereference() { 
+				expr_->dereference();
+				if (!expr_->referred()) {
+					repository->returnBack(expr_);
+				}
 			}
 
 			void mark() { expression().mark(); }
@@ -235,7 +235,12 @@ namespace {
 
 			Expression& expression() const { return *expr_; }
 
-			Number operator-() const { return Number{ -v_, repository->getDatum()->append(expr_, -1) }; }
+			Number operator-() const {
+				auto expr = repository->getDatum();
+				expr->append(expr_, -1);
+
+				return Number { -v_, expr }; 
+			}
 			Number& operator=(const Number& other) {
 				if (this == &other) {
 					return *this;
@@ -243,11 +248,12 @@ namespace {
 
 				Number newone{ other.v() };
 				other.update(newone.expr_, 1);
-				this->v_ = newone.v_;
-				this->expression().dereference();
-				if (!expression().referred()) { repository->returnBack(expr_); }
-				this->expr_ = newone.expr_;
-				this->expression().reference();
+
+				dereference();
+				v_ = newone.v_;
+				expr_ = newone.expr_;
+				reference();
+				
 				return *this;
 			}
 			Number& operator=(const INumber& other) {
@@ -257,11 +263,12 @@ namespace {
 
 				Number newone{ other.v() };
 				other.update(newone.expr_, 1);
-				this->v_ = newone.v_;
-				this->expression().dereference();
-				if (!expression().referred()) { repository->returnBack(expr_); }
-				this->expr_ = newone.expr_;
-				this->expression().reference();
+
+				dereference();
+				v_ = newone.v_;
+				expr_ = newone.expr_;
+				reference();
+
 				return *this;
 			}
 		};
