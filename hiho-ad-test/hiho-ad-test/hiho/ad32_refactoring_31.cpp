@@ -165,9 +165,9 @@ namespace {
 		using ExprPtr = Expression *;
 
 		struct INumber {
-			virtual ValueType  v() const = 0;
 			virtual ~INumber() {}
-			virtual void update(Expression&, ValueType) const = 0;
+			virtual ValueType v() const = 0;
+			virtual void update(ExprPtr, ValueType) const = 0;
 
 		};
 
@@ -180,7 +180,7 @@ namespace {
 				v_(vv), coef_(coef), num_(num) {}
 
 			ValueType v() const override { return v_; }
-			void update(Expression& updated, ValueType coef) const override {
+			void update(ExprPtr updated, ValueType coef) const override {
 				num_.update(updated, coef * coef_);
 			}
 		};
@@ -199,7 +199,7 @@ namespace {
 				v_(vv), lcoef_(lcoef), rcoef_(rcoef), lnum_(lnum), rnum_(rnum) {}
 
 			ValueType v() const override { return v_; }
-			void update(Expression& updated, ValueType coef) const override {
+			void update(ExprPtr updated, ValueType coef) const override {
 				lnum_.update(updated, coef * lcoef_);
 				rnum_.update(updated, coef * rcoef_);
 			}
@@ -214,7 +214,7 @@ namespace {
 			Number(const Number& other) : v_{ other.v_ }, expr_{ other.expr_ } {expression().reference(); }
 			Number(const INumber& other) : v_{ other.v() }, expr_{ repository->getDatum() } {
 				expression().reference();
-				other.update(expression(), 1);
+				other.update(expr_, 1);
 			};
 			~Number() {
 				expression().dereference();
@@ -224,8 +224,8 @@ namespace {
 			void mark() { expression().mark(); }
 
 			ValueType v() const override { return v_; }
-			void update(Expression& updated, ValueType coef) const override {
-				updated.append(expr_, coef);
+			void update(ExprPtr updated, ValueType coef) const override {
+				updated->append(expr_, coef);
 			}
 
 			ValueType d(const Number& x) const {
@@ -242,7 +242,7 @@ namespace {
 				}
 
 				Number newone{ other.v() };
-				other.update(newone.expression(), 1);
+				other.update(newone.expr_, 1);
 				this->v_ = newone.v_;
 				this->expression().dereference();
 				if (!expression().referred()) { repository->returnBack(expr_); }
@@ -256,7 +256,7 @@ namespace {
 				}
 
 				Number newone{ other.v() };
-				other.update(newone.expression(), 1);
+				other.update(newone.expr_, 1);
 				this->v_ = newone.v_;
 				this->expression().dereference();
 				if (!expression().referred()) { repository->returnBack(expr_); }
