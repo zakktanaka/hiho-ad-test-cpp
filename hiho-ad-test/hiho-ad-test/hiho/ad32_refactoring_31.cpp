@@ -4,10 +4,12 @@
 #include <utility>
 
 #include <memory_resource>
+#include <array>
 
 #include "ad_american.hpp"
 #include "timer.hpp"
 #include "iohelper.hpp"
+#include <cassert>
 
 namespace {
 
@@ -78,80 +80,114 @@ namespace {
 				}
 			}
 
+			void clear() noexcept {
+				marked = false;
+				ref = 0;
+				polynomial = {};
+			}
 		};
 
-		struct DataRepository {
-			const static size_t bulk = 100000;
+		struct Store {
+			static constexpr size_t bulk = 100000;
 			using Datum = Expression;
+			using BulkData = std::vector<Datum>;
 
-			struct Element {
-				Element* next;
+			struct Node {
 				Datum* datum;
+				Node*  next;
 			};
 
-			using Data = pmr::vector<Datum>;
-			using Elements = pmr::vector<Element>;
+			struct Nodes {
+				using BulkNodes = pmr::vector<Node>;
+				static constexpr size_t stepSize = 100000;
 
-			struct DataElement {
-				Elements elements;
-				Data data;
-			};
+				Node* remains;
+				std::list<BulkNodes> reserved;
 
-			Element* remains;
-			Element* unassigned;
-			size_t capacity;
-			size_t used;
-			Datum defaultDatum;
-			pmr::vector<DataElement> reserved;
+				void resize() {
+					assert(remains == nullptr && "the number of ramaining nodes should be zero when resizing.");
 
-			DataRepository() : remains{ nullptr }, unassigned{ nullptr }, capacity{ 0 }, used{ 0 }, defaultDatum{}, reserved{} {};
-
-			void resize() {
-				reserved.emplace_back(DataElement{ Elements{bulk, Element{nullptr, nullptr}}, Data{bulk, defaultDatum} });
-				auto& elems = *std::rbegin(reserved);
-
-				auto current = &remains;
-				for (size_t i = 0; i < bulk; ++i) {
-					auto& elem = elems.elements[i];
-					*current = &elem;
-					current = &(elem.next);
-					elem.datum = &(elems.data[i]);
+					reserved.emplace_back(BulkNodes{ stepSize, {nullptr, nullptr} });
+					auto& bulk = *std::rbegin(reserved);
+					
+					auto current = &remains;
+					for (auto& node : bulk) {
+						*current = &node;
+						current  = &(node.next);
+					}
 				}
 
-				capacity += bulk;
+				Nodes() : remains{ nullptr }, reserved{} {}
+
+				Node* getNode() noexcept {
+					if (remains == nullptr) { resize(); }
+
+					auto current = remains;
+					remains = current->next;
+					current->next = nullptr;
+
+					return current;
+				}
+
+				void returnBack(Node* node) noexcept {
+					node->datum = nullptr;
+					node->next  = remains;
+					remains = node;
+				}
+			};
+
+			Node* remains;
+			pmr::list<BulkData> reserved;
+			Nodes nodes;
+			std::function<void(Datum&)> initilize;
+
+			void resize() {
+				assert(remains == nullptr && "the number of remaing data should be zero.");
+
+				reserved.emplace_back(bulk);
+				auto& bulkdata = *std::rbegin(reserved);
+
+				auto current = &remains;
+				for (auto& datum : bulkdata) {
+					initilize(datum);
+
+					auto node = nodes.getNode();
+					node->datum = &datum;
+					node->next  = *current;
+					
+					*current = node;
+					current = &(node->next);
+				}
 			}
 
-			Datum* datum() {
+			Store() : 
+				remains{ nullptr }, 
+				reserved{}, 
+				nodes{}, 
+				initilize{ [](Datum& datum) { datum.clear(); } } {}
+
+			Datum* getDatum() noexcept {
 				if (remains == nullptr) { resize(); }
 
 				auto current = remains;
 				remains = current->next;
+				auto datum = current->datum;
+				nodes.returnBack(current);
 
-				auto d = current->datum;
-				current->datum = nullptr;
-
-				current->next = unassigned;
-				unassigned = current;
-
-				++used;
-				return d;
+				return datum;
 			}
 
-			void dispose(Datum* datum) {
-				auto current = unassigned;
-				unassigned = current->next;
+			void returnBack(Datum* datum) noexcept {
+				initilize(*datum);
 
-				*datum = defaultDatum;
-
+				auto current = nodes.getNode();
 				current->datum = datum;
 				current->next = remains;
-
 				remains = current;
-				--used;
 			}
 		};
 
-		DataRepository* repository;
+		Store* repository;
 
 		using ExprPtr = Expression *;
 
@@ -200,16 +236,16 @@ namespace {
 			ValueType  v_;
 			ExprPtr expr_;
 
-			Number(ValueType vv) : v_{ vv }, expr_{ repository->datum() }  { expression().reference(); }
+			Number(ValueType vv) : v_{ vv }, expr_{ repository->getDatum() }  { expression().reference(); }
 			Number(ValueType vv, ExprPtr expr) : v_{ vv }, expr_{ expr }  {expression().reference(); }
 			Number(const Number& other) : v_{ other.v_ }, expr_{ other.expr_ } {expression().reference(); }
-			Number(const INumber& other) : v_{ other.v() }, expr_{ repository->datum() } {
+			Number(const INumber& other) : v_{ other.v() }, expr_{ repository->getDatum() } {
 				expression().reference();
 				other.update(expression(), 1);
 			};
 			~Number() {
 				expression().dereference();
-				if (!expression().referred()) { repository->dispose(expr_); }
+				if (!expression().referred()) { repository->returnBack(expr_); }
 			}
 
 			void mark() { expression().mark(); }
@@ -226,7 +262,7 @@ namespace {
 
 			Expression& expression() const { return *expr_; }
 
-			Number operator-() const { return Number{ -v_, repository->datum()->append(expr_, -1) }; }
+			Number operator-() const { return Number{ -v_, repository->getDatum()->append(expr_, -1) }; }
 			Number& operator=(const Number& other) {
 				if (this == &other) {
 					return *this;
@@ -236,7 +272,7 @@ namespace {
 				other.update(newone.expression(), 1);
 				this->v_ = newone.v_;
 				this->expression().dereference();
-				if (!expression().referred()) { repository->dispose(expr_); }
+				if (!expression().referred()) { repository->returnBack(expr_); }
 				this->expr_ = newone.expr_;
 				this->expression().reference();
 				return *this;
@@ -250,7 +286,7 @@ namespace {
 				other.update(newone.expression(), 1);
 				this->v_ = newone.v_;
 				this->expression().dereference();
-				if (!expression().referred()) { repository->dispose(expr_); }
+				if (!expression().referred()) { repository->returnBack(expr_); }
 				this->expr_ = newone.expr_;
 				this->expression().reference();
 				return *this;
@@ -328,19 +364,19 @@ void hiho::ad32_refactoring_31(double s, double sigma, double k, double r, doubl
 	auto pm = pmr::unsynchronized_pool_resource();
 	pmr::set_default_resource(&pm);
 	{
-		math::DataRepository rep;
+		math::Store rep;
 		math::repository = &rep;
 
-		auto func = [&]() {
-			Real rs{ s }; rs.mark();
-			Real rsigma{ sigma }; rsigma.mark();
-			Real rr{ r }; rr.mark();
-			Real rt{ t }; rt.mark();
-			auto value = putAmericanOption(rs, rsigma, k, rr, rt, simulation);
-			return pmr::vector<Real>{ value, rs, rsigma, rr, rt };
-		};
-
 		{
+			auto func = [&]() {
+				Real rs{ s }; rs.mark();
+				Real rsigma{ sigma }; rsigma.mark();
+				Real rr{ r }; rr.mark();
+				Real rt{ t }; rt.mark();
+				auto value = putAmericanOption(rs, rsigma, k, rr, rt, simulation);
+				return pmr::vector<Real>{ value, rs, rsigma, rr, rt };
+			};
+
 			auto time = hiho::measureTime<3>(func);
 			auto vv = func();
 			auto& value = vv[0];
