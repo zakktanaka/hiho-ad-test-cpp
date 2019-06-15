@@ -38,12 +38,12 @@ namespace {
 			Expression& operator=(const Expression&) = default;
 			Expression& operator=(Expression&&)      = default;
 
-			void mark       () noexcept { marked = true; }
-			void reference  () noexcept { ++ref; }
-			void dereference() noexcept { --ref; }
-			bool referred   () const noexcept { return ref != 0; }
+			void mark       () { marked = true; }
+			void reference  () { ++ref; }
+			void dereference() { --ref; }
+			bool referred   () const { return ref != 0; }
 
-			ValueType d(const ExprPtr expr, Cache& cache) const noexcept {
+			ValueType d(const ExprPtr expr, Cache& cache) const {
 				if (this == expr) {
 					return 1;
 				}
@@ -62,7 +62,7 @@ namespace {
 				return dx;
 			}
 
-			ExprPtr append(const ExprPtr expr, ValueType coef) noexcept {
+			ExprPtr append(const ExprPtr expr, ValueType coef) {
 				if (expr->marked) {
 					for (auto& tm : polynomial) {
 						if (tm.first == expr) {
@@ -80,7 +80,7 @@ namespace {
 				}
 			}
 
-			void clear() noexcept {
+			void clear() {
 				marked = false;
 				ref = 0;
 				polynomial = {};
