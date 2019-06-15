@@ -335,7 +335,7 @@ namespace {
 		template<typename T> Binary<T> operator/(const INumber<T>& l, const INumber<T>& r) {
 			auto ll = l.v();
 			auto rr = r.v();
-			return Binary{ l.v() / r.v(), 1.0 / rr, l, -ll / (rr * rr), r };
+			return Binary<T>{ l.v() / r.v(), 1.0 / rr, l, -ll / (rr * rr), r };
 		}
 		template<typename T> Unary<T> operator+(const INumber<T>& l, typename INumber<T>::ValueType r) { return Unary<T>{ l.v() + r, 1, l }; }
 		template<typename T> Unary<T> operator-(const INumber<T>& l, typename INumber<T>::ValueType r) { return Unary<T>{ l.v() - r, 1, l }; }
@@ -347,33 +347,34 @@ namespace {
 		template<typename T> Unary<T> operator/(typename INumber<T>::ValueType l, const INumber<T>& r) { return Unary<T>{ l / r.v(), -l / (r.v() * r.v()), r }; }
 		template<typename T> bool operator>(const INumber<T>& l, const INumber<T>& r) { return l.v() > r.v(); }
 		template<typename T> bool operator>(const INumber<T>& l, typename INumber<T>::ValueType r) { return l.v() > r; }
+
+		using std::exp;
+		using std::sqrt;
+		using std::pow;
+
 		template<typename T> Unary<T> exp(const INumber<T>& l) {
 			using ValueType = typename INumber<T>::ValueType;
 
-			ValueType ll = std::exp(l.v());
+			ValueType ll = exp(l.v());
 			return Unary<T>{ ll, ll, l };
 		}
 		template<typename T> Unary<T> sqrt(const INumber<T>& l) {
 			using ValueType = typename INumber<T>::ValueType;
 
-			ValueType ll = std::sqrt(l.v());
+			ValueType ll = sqrt(l.v());
 			return Unary<T>{ ll, 0.5 / ll, l };
 		}
 		template<typename T> Unary<T> pow(const INumber<T>& l, typename INumber<T>::ValueType r) {
 			using ValueType = typename INumber<T>::ValueType;
 
-			ValueType ll = std::pow(l.v(), r);
+			ValueType ll = 1; // math::pow(l.v(), r);
 			return Unary<T>{ ll, r* ll / l.v(), l };
 		}
-
-		using std::exp;
-		using std::sqrt;
-		using std::pow;
 	}
 
 	using Real = math::Number < math::Number<double>>;
 
-	inline Real putAmericanOption(const Real& s, const Real& sigma, const Real& k, const Real& r, const Real& t, int simulation) {
+	inline Real putAmericanOption(Real s, Real sigma, Real k, Real r, Real t, int simulation) {
 
 		Real dt = t / simulation;
 		Real up = math::exp(sigma * math::sqrt(dt));
@@ -402,50 +403,51 @@ namespace {
 
 void hiho::ad34_second_defferential(double s, double sigma, double k, double r, double t, int simulation)
 {
-	auto dfpm = pmr::get_default_resource();
-	auto pm = pmr::unsynchronized_pool_resource();
-	pmr::set_default_resource(&pm);
-	{
-		math::Store<double> rep0;
-		math::repository<double> = &rep0;
-		math::Store<math::Number<double>> rep1;
-		math::repository<math::Number<double>> = &rep1;
+	//auto dfpm = pmr::get_default_resource();
+	//auto pm = pmr::unsynchronized_pool_resource();
+	//pmr::set_default_resource(&pm);
+	//{
+	//	math::Store<double> rep0;
+	//	math::repository<double> = &rep0;
+	//	math::Store<math::Number<double>> rep1;
+	//	math::repository<math::Number<double>> = &rep1;
 
-		auto func = [&]() {
-			Real rs{ s }; rs.mark();
-			Real rsigma{ sigma }; rsigma.mark();
-			Real rr{ r }; rr.mark();
-			Real rt{ t }; rt.mark();
-			auto value = putAmericanOption(rs, rsigma, math::Number<double>{ k }, rr, rt, simulation);
-			return pmr::vector<Real>{ value, rs, rsigma, rr, rt };
-		};
+	//	auto func = [&]() {
+	//		Real rs{ s }; rs.mark();
+	//		Real rsigma{ sigma }; rsigma.mark();
+	//		Real rk{ k };
+	//		Real rr{ r }; rr.mark();
+	//		Real rt{ t }; rt.mark();
+	//		auto value = putAmericanOption(rs, rsigma, rk, rr, rt, simulation);
+	//		return pmr::vector<Real>{ value, rs, rsigma, rr, rt };
+	//	};
 
-		{
-			auto time = hiho::measureTime<3>(func);
-			auto vv = func();
-			auto& value = vv[0];
-			auto& rs = vv[1];
-			auto& rsigma = vv[2];
-			auto& rr = vv[3];
-			auto& rt = vv[4];
+	//	{
+	//		auto time = hiho::measureTime<3>(func);
+	//		auto vv = func();
+	//		auto& value = vv[0];
+	//		auto& rs = vv[1];
+	//		auto& rsigma = vv[2];
+	//		auto& rr = vv[3];
+	//		auto& rt = vv[4];
 
-			auto diff = value.v().v() - hiho::american(s, sigma, k, r, t, simulation);
+	//		auto diff = value.v().v() - hiho::american(s, sigma, k, r, t, simulation);
 
-			auto delta = hiho::newTimer([&]() {return value.d(rs).v(); });
-			auto vega = hiho::newTimer([&]() {return value.d(rsigma).v(); });
-			auto theta = hiho::newTimer([&]() {return value.d(rt).v(); });
+	//		auto delta = hiho::newTimer([&]() {return value.d(rs).v(); });
+	//		auto vega = hiho::newTimer([&]() {return value.d(rsigma).v(); });
+	//		auto theta = hiho::newTimer([&]() {return value.d(rt).v(); });
 
-			HIHO_IO_MAX_LEN_DOUBLE_LSHOW;
-			HIHO_IO_LEFT_COUT
-				<< HIHO_IO_FUNC_WIDTH << __func__ << " ( " << simulation << " )";
-			HIHO_IO_RIGHT_COUT
-				<< ", " << HIHO_IO_VALUE(diff)
-				<< ", " << HIHO_IO_TIME(time)
-				<< ", " << HIHO_IO_VALUE_TIME(delta)
-				<< ", " << HIHO_IO_VALUE_TIME(vega)
-				<< ", " << HIHO_IO_VALUE_TIME(theta)
-				<< std::endl;
-		}
-	}
-	pmr::set_default_resource(dfpm);
+	//		HIHO_IO_MAX_LEN_DOUBLE_LSHOW;
+	//		HIHO_IO_LEFT_COUT
+	//			<< HIHO_IO_FUNC_WIDTH << __func__ << " ( " << simulation << " )";
+	//		HIHO_IO_RIGHT_COUT
+	//			<< ", " << HIHO_IO_VALUE(diff)
+	//			<< ", " << HIHO_IO_TIME(time)
+	//			<< ", " << HIHO_IO_VALUE_TIME(delta)
+	//			<< ", " << HIHO_IO_VALUE_TIME(vega)
+	//			<< ", " << HIHO_IO_VALUE_TIME(theta)
+	//			<< std::endl;
+	//	}
+	//}
+	//pmr::set_default_resource(dfpm);
 }
