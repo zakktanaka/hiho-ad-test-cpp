@@ -174,22 +174,24 @@ namespace {
 		Unary operator/(ValueType l, const INumber& r) { return Unary{ l / r.v(), -l / (r.v() * r.v()), r }; }
 		bool operator>(const INumber& l, const INumber& r) { return l.v() > r.v(); }
 		bool operator>(const INumber& l, ValueType r) { return l.v() > r; }
-		Unary exp(const INumber& l) {
-			auto ll = std::exp(l.v());
-			return Unary{ ll, ll, l };
-		}
-		Unary sqrt(const INumber& l) {
-			auto ll = std::sqrt(l.v());
-			return Unary{ ll, 0.5 / ll, l };
-		}
-		Unary pow(const INumber& l, ValueType r) {
-			auto ll = std::pow(l.v(), r);
-			return Unary{ ll, r * ll / l.v(), l };
-		}
-
+		
 		using std::exp;
 		using std::sqrt;
 		using std::pow;
+
+		Unary exp(const INumber& l) {
+			auto ll = exp(l.v());
+			return Unary{ ll, ll, l };
+		}
+		Unary sqrt(const INumber& l) {
+			auto ll = sqrt(l.v());
+			return Unary{ ll, 0.5 / ll, l };
+		}
+		Unary pow(const INumber& l, ValueType r) {
+			auto ll = pow(l.v(), r);
+			return Unary{ ll, r * ll / l.v(), l };
+		}
+
 	}
 
 	using Real = math::Number;
