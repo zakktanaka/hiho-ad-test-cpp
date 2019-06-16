@@ -57,20 +57,21 @@ namespace {
 				return dx;
 			}
 
-			void addTerm(const Term& term) {
+			void addTerm(ValueType coef, const ExpPtr& other) {
 				for (auto& tm : polynomial) {
-					if (tm.second == term.second) {
-						tm.first += term.first;
+					if (tm.second == other) {
+						tm.first += coef;
 						return;
 					}
 				}
-				polynomial.emplace_back(term);
+				polynomial.emplace_back(coef, other);
 			}
 
 			void addExpresison(ValueType coef, const ExpPtr& other) {
 				if (other->marked) {
-					addTerm({coef, other});
-				} else {
+					addTerm(coef, other);
+				}
+				else {
 					for (auto& otm : other->polynomial) {
 						auto c = coef * otm.first;
 						auto& e = otm.second;
