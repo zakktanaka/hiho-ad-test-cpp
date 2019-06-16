@@ -21,7 +21,7 @@ namespace {
 		struct Expression {
 			using Cache      = std::unordered_map<const void*, ValueType>;
 			using ExpPtr     = std::shared_ptr<math::Expression>;
-			using Term       = std::pair<ValueType, ExpPtr>;
+			using Term       = std::pair<ExpPtr, ValueType>;
 			using Polynomial = pmr::vector<Term>;
 
 			bool marked;
@@ -30,11 +30,11 @@ namespace {
 			Expression() : marked{ false }, polynomial{} {}
 			Expression(
 				ValueType cof, ExpPtr expr
-			) : marked{ false }, polynomial{ {cof, expr} } {}
+			) : marked{ false }, polynomial{ {expr, cof} } {}
 			Expression(
 				ValueType lcof, ExpPtr lhs,
 				ValueType rcof, ExpPtr rhs
-			) : marked{ false }, polynomial{ {lcof, lhs},{rcof, rhs} } {}
+			) : marked{ false }, polynomial{ {lhs, lcof},{rhs, rcof} } {}
 
 			void mark() { marked = true; }
 
@@ -50,7 +50,7 @@ namespace {
 
 				ValueType dx = 0;
 				for (auto& term : polynomial) {
-					dx += term.first * term.second->d(expr, cache);
+					dx += term.second * term.first->d(expr, cache);
 				}
 				cache[this] = dx;
 				return dx;
@@ -58,8 +58,8 @@ namespace {
 
 			void addTerm(const Term& term) {
 				for (auto& tm : polynomial) {
-					if (tm.second == term.second) {
-						tm.first += term.first;
+					if (tm.first == term.first) {
+						tm.second += term.second;
 						return;
 					}
 				}
@@ -68,12 +68,12 @@ namespace {
 
 			void addExpresison(ValueType coef, const ExpPtr& other) {
 				if (other->marked) {
-					addTerm({ coef, other });
+					addTerm({ other, coef});
 				}
 				else {
 					for (auto& otm : other->polynomial) {
-						auto c = coef * otm.first;
-						auto& e = otm.second;
+						auto c = coef * otm.second;
+						auto& e = otm.first;
 						addExpresison(c, e);
 					}
 				}
