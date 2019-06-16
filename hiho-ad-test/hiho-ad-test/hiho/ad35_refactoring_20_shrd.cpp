@@ -28,13 +28,6 @@ namespace {
 			Polynomial polynomial;
 
 			Expression() : marked{ false }, polynomial{} {}
-			Expression(
-				ValueType cof, ExpPtr expr
-			) : marked{ false }, polynomial{ {expr, cof} } {}
-			Expression(
-				ValueType lcof, ExpPtr lhs,
-				ValueType rcof, ExpPtr rhs
-			) : marked{ false }, polynomial{ {lhs, lcof},{rhs, rcof} } {}
 
 			void mark() { marked = true; }
 
@@ -146,7 +139,10 @@ namespace {
 
 			Expression& expression() const { return *expr_; }
 
-			Number operator-() const { return Number{ -v_, std::make_shared<Expression>(-1, expr_) }; }
+			Number operator-() const { 
+				auto expr = std::make_shared<Expression>();
+				expr->addTerm(-1, expr_);
+				return Number{ -v_, expr }; }
 			Number& operator=(const INumber& other) {
 				Number newone{ other.v() };
 				other.update(newone.expression(), 1);
