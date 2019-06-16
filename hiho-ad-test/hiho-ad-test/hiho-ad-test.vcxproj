@@ -162,6 +162,7 @@
     <ClCompile Include="hiho\ad32_refactoring_31.cpp" />
     <ClCompile Include="hiho\ad33_template.cpp" />
     <ClCompile Include="hiho\ad34_second_defferential.cpp" />
+    <ClCompile Include="hiho\ad35_refactoring_20_shrd.cpp" />
     <ClCompile Include="hiho\ad_american.cpp" />
     <ClCompile Include="Main.cpp" />
   </ItemGroup>
@@ -201,6 +202,7 @@
     <ClInclude Include="hiho\ad32_refactoring_31.hpp" />
     <ClInclude Include="hiho\ad33_template.hpp" />
     <ClInclude Include="hiho\ad34_second_defferential.hpp" />
+    <ClInclude Include="hiho\ad35_refactoring_20_shrd.hpp" />
     <ClInclude Include="hiho\ad_american.hpp" />
     <ClInclude Include="hiho\ad21_exprump_tpv_lazy_pmr_shrnk.hpp" />
     <ClInclude Include="hiho\iohelper.hpp" />
