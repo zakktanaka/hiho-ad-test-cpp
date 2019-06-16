@@ -15,17 +15,12 @@ namespace {
 	namespace pmr = std::pmr;
 
 	using ValueType = double;
-	using Cache = std::unordered_map<const void*, ValueType>;
-
-	namespace math {
-		struct Expression;
-	}
-
-	using ExpPtr     = std::shared_ptr<math::Expression>;
 
 	namespace math {
 
 		struct Expression {
+			using Cache      = std::unordered_map<const void*, ValueType>;
+			using ExpPtr     = std::shared_ptr<math::Expression>;
 			using Term       = std::pair<ValueType, ExpPtr>;
 			using Polynomial = pmr::vector<Term>;
 
@@ -127,6 +122,8 @@ namespace {
 		};
 
 		struct Number : public INumber {
+			using Cache  = typename Expression::Cache;
+			using ExpPtr = typename Expression::ExpPtr;
 			ValueType  v_;
 			ExpPtr expr_;
 
