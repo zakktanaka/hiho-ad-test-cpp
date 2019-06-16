@@ -141,7 +141,7 @@ namespace {
 
 			Number operator-() const { 
 				auto expr = std::make_shared<Expression>();
-				expr->addTerm(-1, expr_);
+				expr->addExpresison(-1, expr_);
 				return Number{ -v_, expr }; }
 			Number& operator=(const INumber& other) {
 				Number newone{ other.v() };
