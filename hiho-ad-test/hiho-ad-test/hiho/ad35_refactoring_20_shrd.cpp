@@ -18,15 +18,28 @@ namespace {
 
 	namespace math {
 
-		struct Expression {
+		class Expression {
+		public:
 			using Cache      = std::unordered_map<const void*, ValueType>;
 			using ExpPtr     = std::shared_ptr<math::Expression>;
 			using Term       = std::pair<ExpPtr, ValueType>;
 			using Polynomial = pmr::vector<Term>;
 
+		private:
 			bool marked;
 			Polynomial polynomial;
 
+			void addTerm(ValueType coef, const ExpPtr& other) {
+				for (auto& tm : polynomial) {
+					if (tm.first == other) {
+						tm.second += coef;
+						return;
+					}
+				}
+				polynomial.emplace_back(other, coef);
+			}
+
+		public:
 			Expression() : marked{ false }, polynomial{} {}
 
 			void mark() { marked = true; }
@@ -47,16 +60,6 @@ namespace {
 				}
 				cache[this] = dx;
 				return dx;
-			}
-
-			void addTerm(ValueType coef, const ExpPtr& other) {
-				for (auto& tm : polynomial) {
-					if (tm.first == other) {
-						tm.second += coef;
-						return;
-					}
-				}
-				polynomial.emplace_back(other, coef);
 			}
 
 			void addExpresison(ValueType coef, const ExpPtr& other) {
