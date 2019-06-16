@@ -123,9 +123,9 @@ namespace {
 			ValueType  v_;
 			ExpPtr expr_;
 
-			Number(ValueType vv) : v_{ vv }, expr_{ std::make_shared<Expression>() }  {}
 			Number(ValueType vv, ExpPtr expr) : v_{ vv }, expr_{ expr }  {}
-			Number(const INumber& other) : v_{ other.v() }, expr_{ std::make_shared<Expression>() } { other.update(expression(), 1); };
+			Number(ValueType vv) : Number{ vv , std::make_shared<Expression>() }  {}
+			Number(const INumber& other) : Number{ other.v(), std::make_shared<Expression>() } { other.update(expression(), 1); };
 			~Number() {}
 
 			void mark() { expr_->mark(); }
