@@ -164,6 +164,7 @@ namespace {
 				Number{ other.v(), std::make_shared<Expr>() } {
 				other.update(*expr_, 1);
 			};
+			Number() : Number(ValueType(1)) {}
 			~Number() {}
 
 			void mark() { expr_->mark(); }
@@ -187,6 +188,12 @@ namespace {
 			ThisType& operator=(const BaseType& other) {
 				ThisType newone{ other.v() };
 				other.update(*(newone.expr_), 1);
+				this->v_ = newone.v_;
+				this->expr_ = newone.expr_;
+				return *this;
+			}
+			ThisType& operator+=(const ThisType& other) {
+				ThisType newone = *this + other;
 				this->v_ = newone.v_;
 				this->expr_ = newone.expr_;
 				return *this;
@@ -234,7 +241,9 @@ namespace {
 
 	}
 
-	using Real = math::Number<double, math::Expression<double>>;
+	using Number  = math::Number<double, math::Expression<double>>;
+
+	using Real = Number;
 
 	inline Real putAmericanOption(const Real& s, const Real& sigma, const Real& k, const Real& r, const Real& t, int simulation) {
 
