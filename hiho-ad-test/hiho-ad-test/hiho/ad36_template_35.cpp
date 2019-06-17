@@ -14,22 +14,23 @@ namespace {
 
 	namespace pmr = std::pmr;
 
-	using ValueType = double;
-
 	namespace math {
 
+		template<typename EV>
 		class Expression {
 		public:
-			using Cache      = std::unordered_map<const void*, ValueType>;
-			using ExpPtr     = std::shared_ptr<math::Expression>;
-			using Term       = std::pair<ExpPtr, ValueType>;
-			using Polynomial = pmr::vector<Term>;
+			using ExprValueType = EV;
+			using ThisType      = Expression<ExprValueType>;
+			using Cache         = std::unordered_map<const void*, ExprValueType>;
+			using ExpPtr        = std::shared_ptr<ThisType>;
+			using Term          = std::pair<ExpPtr, ExprValueType>;
+			using Polynomial    = pmr::vector<Term>;
 
 		private:
 			bool marked;
 			Polynomial polynomial;
 
-			void addTerm(ValueType coef, const ExpPtr& other) {
+			void addTerm(ExprValueType coef, const ExpPtr& other) {
 				for (auto& tm : polynomial) {
 					if (tm.first == other) {
 						tm.second += coef;
@@ -44,7 +45,7 @@ namespace {
 
 			void mark() { marked = true; }
 
-			ValueType d(ExpPtr& expr, Cache& cache) const {
+			ExprValueType d(ExpPtr& expr, Cache& cache) const {
 				if (this == expr.get()) {
 					return 1;
 				}
@@ -54,7 +55,7 @@ namespace {
 					return it->second;
 				}
 
-				ValueType dx = 0;
+				ExprValueType dx = 0;
 				for (auto& term : polynomial) {
 					dx += term.second * term.first->d(expr, cache);
 				}
@@ -62,7 +63,7 @@ namespace {
 				return dx;
 			}
 
-			void addExpresison(ValueType coef, const ExpPtr& other) {
+			void addExpresison(ExprValueType coef, const ExpPtr& other) {
 				if (other->marked) {
 					addTerm(coef, other);
 				} else {
@@ -75,53 +76,81 @@ namespace {
 			}
 		};
 
+		template<typename V, typename E>
 		struct INumber {
+			using ValueType     = V;
+			using Expr          = E;
+			using ExprValueType = typename E::ExprValueType;
+			using ThisType      = INumber<ValueType, Expr>;
+
 			virtual ~INumber() {}
 			virtual ValueType  v() const = 0;
-			virtual void update(Expression&, ValueType) const = 0;
+			virtual void update(Expr&, const ExprValueType&) const = 0;
 
 		};
 
-		struct Unary : INumber {
-			ValueType v_;
-			ValueType coef_;
-			const INumber& num_;
+		template<typename V, typename E>
+		struct Unary : INumber<V, E> {
+			using ValueType     = V;
+			using Expr          = E;
+			using ExprValueType = typename E::ExprValueType;
+			using BaseType      = INumber<ValueType, Expr>;
+			using ThisType      = Unary<ValueType, Expr>;
 
-			Unary(ValueType vv, ValueType coef, const INumber& num) :
+			ValueType       v_;
+			ExprValueType   coef_;
+			const BaseType& num_;
+
+			Unary(ValueType vv, const ExprValueType& coef, const BaseType& num) :
 				v_(vv), coef_(coef), num_(num) {}
 
 			ValueType v() const override { return v_; }
 
-			void update(Expression& updated, ValueType coef) const override {
+			void update(Expr& updated, const ExprValueType& coef) const override {
 				num_.update(updated, coef * coef_);
 			}
 		};
 
-		struct Binary : INumber {
-			ValueType v_;
-			ValueType lcoef_;
-			ValueType rcoef_;
-			const INumber& lnum_;
-			const INumber& rnum_;
+		template<typename V, typename E>
+		struct Binary : INumber<V, E> {
+			using ValueType     = V;
+			using Expr          = E;
+			using ExprValueType = typename E::ExprValueType;
+			using BaseType      = INumber<ValueType, Expr>;
+			using ThisType      = Binary<ValueType, Expr>;
+
+			ValueType      v_;
+			ExprValueType  lcoef_;
+			ExprValueType  rcoef_;
+			const BaseType& lnum_;
+			const BaseType& rnum_;
 
 			Binary(
 				ValueType vv,
-				ValueType lcoef, const INumber& lnum,
-				ValueType rcoef, const INumber& rnum) :
+				const ExprValueType& lcoef, const BaseType& lnum,
+				const ExprValueType& rcoef, const BaseType& rnum) :
 				v_(vv), lcoef_(lcoef), rcoef_(rcoef), lnum_(lnum), rnum_(rnum) {}
 
 			ValueType v() const override { return v_; }
 
-			void update(Expression& updated, ValueType coef) const override {
+			void update(Expr& updated, const ExprValueType& coef) const override {
 				lnum_.update(updated, coef * lcoef_);
 				rnum_.update(updated, coef * rcoef_);
 			}
 		};
 
-		class Number : public INumber {
+		template<typename V, typename E>
+		class Number : public INumber<V, E> {
+		public :
+			using ValueType     = V;
+			using Expr          = E;
+			using ExprValueType = typename E::ExprValueType;
+			using BaseType      = INumber<ValueType, Expr>;
+			using ThisType      = Number<ValueType, Expr>;
+
 		private:
-			using Cache  = typename Expression::Cache;
-			using ExpPtr = typename Expression::ExpPtr;
+			using Cache  = typename Expr::Cache;
+			using ExpPtr = typename Expr::ExpPtr;
 
 			ValueType  v_;
 			ExpPtr     expr_;
@@ -130,9 +159,9 @@ namespace {
 
 		public:
 			Number(ValueType vv) :
-				Number{ vv , std::make_shared<Expression>() } {}
-			Number(const INumber& other) :
-				Number{ other.v(), std::make_shared<Expression>() } {
+				Number{ vv , std::make_shared<Expr>() } {}
+			Number(const BaseType& other) :
+				Number{ other.v(), std::make_shared<Expr>() } {
 				other.update(*expr_, 1);
 			};
 			~Number() {}
@@ -141,22 +170,22 @@ namespace {
 
 			ValueType v() const override { return v_; }
 
-			void update(Expression& updated, ValueType coef) const override {
+			void update(Expr& updated, const ExprValueType& coef) const override {
 				updated.addExpresison(coef, expr_);
 			}
 
-			ValueType d(Number& x) const {
+			ExprValueType d(ThisType& x) const {
 				Cache cache;
 				return expr_->d(x.expr_, cache);
 			}
 
-			Number operator-() const {
-				auto expr = std::make_shared<Expression>();
+			ThisType operator-() const {
+				auto expr = std::make_shared<Expr>();
 				expr->addExpresison(-1, expr_);
 				return Number{ -v_, expr };
 			}
-			Number& operator=(const INumber& other) {
-				Number newone{ other.v() };
+			ThisType& operator=(const BaseType& other) {
+				ThisType newone{ other.v() };
 				other.update(*(newone.expr_), 1);
 				this->v_ = newone.v_;
 				this->expr_ = newone.expr_;
@@ -164,45 +193,48 @@ namespace {
 			}
 		};
 
-		Binary operator+(const INumber& l, const INumber& r) { return Binary{ l.v() + r.v(), 1, l, 1, r }; }
-		Binary operator-(const INumber& l, const INumber& r) { return Binary{ l.v() - r.v(), 1, l, -1, r }; }
-		Binary operator*(const INumber& l, const INumber& r) { return Binary{ l.v() * r.v(), r.v(), l, l.v(), r }; }
-		Binary operator/(const INumber& l, const INumber& r) {
+		template<typename V, typename E> Binary<V, E> operator+(const INumber<V, E>& l, const INumber<V, E>& r) { return Binary<V, E>{ l.v() + r.v(), 1, l, 1, r }; }
+		template<typename V, typename E> Binary<V, E> operator-(const INumber<V, E>& l, const INumber<V, E>& r) { return Binary<V, E>{ l.v() - r.v(), 1, l, -1, r }; }
+		template<typename V, typename E> Binary<V, E> operator*(const INumber<V, E>& l, const INumber<V, E>& r) { return Binary<V, E>{ l.v() * r.v(), r.v(), l, l.v(), r }; }
+		template<typename V, typename E> Binary<V, E> operator/(const INumber<V, E>& l, const INumber<V, E>& r) {
 			auto ll = l.v();
 			auto rr = r.v();
-			return Binary{ l.v() / r.v(), 1.0 / rr, l, -ll / (rr * rr), r };
+			return Binary<V, E>{ l.v() / r.v(), 1.0 / rr, l, -ll / (rr * rr), r };
 		}
-		Unary operator+(const INumber& l, ValueType r) { return Unary{ l.v() + r, 1, l }; }
-		Unary operator-(const INumber& l, ValueType r) { return Unary{ l.v() - r, 1, l }; }
-		Unary operator*(const INumber& l, ValueType r) { return Unary{ l.v() * r, r, l }; }
-		Unary operator/(const INumber& l, ValueType r) { return Unary{ l.v() / r, 1.0 / r, l }; }
-		Unary operator+(ValueType l, const INumber& r) { return Unary{ l + r.v(), 1, r }; }
-		Unary operator-(ValueType l, const INumber& r) { return Unary{ l - r.v(), -1, r }; }
-		Unary operator*(ValueType l, const INumber& r) { return Unary{ l * r.v(), l, r }; }
-		Unary operator/(ValueType l, const INumber& r) { return Unary{ l / r.v(), -l / (r.v() * r.v()), r }; }
-		bool operator>(const INumber& l, const INumber& r) { return l.v() > r.v(); }
-		bool operator>(const INumber& l, ValueType r) { return l.v() > r; }
+		template<typename V, typename E> Unary<V, E> operator+(const INumber<V, E>& l, typename INumber<V, E>::ValueType r) { return Unary<V, E>{ l.v() + r, 1, l }; }
+		template<typename V, typename E> Unary<V, E> operator-(const INumber<V, E>& l, typename INumber<V, E>::ValueType r) { return Unary<V, E>{ l.v() - r, 1, l }; }
+		template<typename V, typename E> Unary<V, E> operator*(const INumber<V, E>& l, typename INumber<V, E>::ValueType r) { return Unary<V, E>{ l.v() * r, r, l }; }
+		template<typename V, typename E> Unary<V, E> operator/(const INumber<V, E>& l, typename INumber<V, E>::ValueType r) { return Unary<V, E>{ l.v() / r, 1.0 / r, l }; }
+		template<typename V, typename E> Unary<V, E> operator+(typename INumber<V, E>::ValueType l, const INumber<V, E>& r) { return Unary<V, E>{ l + r.v(), 1, r }; }
+		template<typename V, typename E> Unary<V, E> operator-(typename INumber<V, E>::ValueType l, const INumber<V, E>& r) { return Unary<V, E>{ l - r.v(), -1, r }; }
+		template<typename V, typename E> Unary<V, E> operator*(typename INumber<V, E>::ValueType l, const INumber<V, E>& r) { return Unary<V, E>{ l * r.v(), l, r }; }
+		template<typename V, typename E> Unary<V, E> operator/(typename INumber<V, E>::ValueType l, const INumber<V, E>& r) { return Unary<V, E>{ l / r.v(), -l / (r.v() * r.v()), r }; }
+		template<typename V, typename E> bool operator>(const INumber<V, E>& l, const INumber<V, E>& r) { return l.v() > r.v(); }
+		template<typename V, typename E> bool operator>(const INumber<V, E>& l, typename INumber<V, E>::ValueType r) { return l.v() > r; }
 
 		using std::exp;
 		using std::sqrt;
 		using std::pow;
 
-		Unary exp(const INumber& l) {
+		template<typename V, typename E>
+		Unary<V, E> exp(const INumber<V, E>& l) {
 			auto ll = exp(l.v());
 			return Unary{ ll, ll, l };
 		}
-		Unary sqrt(const INumber& l) {
+		template<typename V, typename E>
+		Unary<V, E> sqrt(const INumber<V, E>& l) {
 			auto ll = sqrt(l.v());
 			return Unary{ ll, 0.5 / ll, l };
 		}
-		Unary pow(const INumber& l, ValueType r) {
+		template<typename V, typename E>
+		Unary<V, E> pow(const INumber<V, E>& l, typename INumber<V, E>::ValueType r) {
 			auto ll = pow(l.v(), r);
 			return Unary{ ll, r * ll / l.v(), l };
 		}
 
 	}
 
-	using Real = math::Number;
+	using Real = math::Number<double, math::Expression<double>>;
 
 	inline Real putAmericanOption(const Real& s, const Real& sigma, const Real& k, const Real& r, const Real& t, int simulation) {
 
