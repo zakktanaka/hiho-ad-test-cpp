@@ -45,6 +45,7 @@ int main(int argc, char* argv[]) {
 	FUNC( 32, ad32_refactoring_31             (100, 0.2, 100, 0.005, 3, 1000));
 	FUNC( 33, ad33_template                   (100, 0.2, 100, 0.005, 3, 1000));
 	FUNC( 35, ad35_refactoring_20_shrd        (100, 0.2, 100, 0.005, 3, 1000));
+	FUNC( 36, ad36_template_35                (100, 0.2, 100, 0.005, 3, 1000));
 
 	FUNC(300, ad00_primitive_double           (100, 0.2, 100, 0.005, 3, 3000));
 	FUNC(308, ad08_expr_vec_tape_vec_cache    (100, 0.2, 100, 0.005, 3, 3000));
