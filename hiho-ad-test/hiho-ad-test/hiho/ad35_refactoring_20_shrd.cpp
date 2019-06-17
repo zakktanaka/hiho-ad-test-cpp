@@ -221,7 +221,7 @@ namespace {
 
 		for (int j = simulation - 1; j != 0; --j) {
 			for (int i = 0; i != j; ++i) {
-				p[i] = p0 * p[i + 1] + p1 * p[i];    // binomial value
+				p[i] = p0 * p[i + int(1)] + p1 * p[i];    // binomial value
 				Real exercise = k - s * math::pow(up, 2.0 * i - j);  // exercise value
 				p[i] = p[i] > exercise ? p[i] : exercise;
 			}
