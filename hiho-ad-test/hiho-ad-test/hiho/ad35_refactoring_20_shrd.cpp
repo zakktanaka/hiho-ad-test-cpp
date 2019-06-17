@@ -118,38 +118,46 @@ namespace {
 			}
 		};
 
-		struct Number : public INumber {
+		class Number : public INumber {
+		private:
 			using Cache  = typename Expression::Cache;
 			using ExpPtr = typename Expression::ExpPtr;
+			
 			ValueType  v_;
-			ExpPtr expr_;
+			ExpPtr     expr_;
 
 			Number(ValueType vv, ExpPtr expr) : v_{ vv }, expr_{ expr }  {}
-			Number(ValueType vv) : Number{ vv , std::make_shared<Expression>() }  {}
-			Number(const INumber& other) : Number{ other.v(), std::make_shared<Expression>() } { other.update(expression(), 1); };
+
+		public:
+			Number(ValueType vv) : 
+				Number{ vv , std::make_shared<Expression>() }  {}
+			Number(const INumber& other) : 
+				Number{ other.v(), std::make_shared<Expression>() } {
+				other.update(*expr_, 1);
+			};
 			~Number() {}
 
 			void mark() { expr_->mark(); }
 
 			ValueType v() const override { return v_; }
+
 			void update(Expression& updated, ValueType coef) const override {
 				updated.addExpresison(coef, expr_);
 			}
 
 			ValueType d(Number& x) const {
 				Cache cache;
-				return expression().d(x.expr_, cache);
+				return expr_->d(x.expr_, cache);
 			}
-
-			Expression& expression() const { return *expr_; }
 
 			Number operator-() const { 
 				auto expr = std::make_shared<Expression>();
 				expr->addExpresison(-1, expr_);
-				return Number{ -v_, expr }; }
+				return Number{ -v_, expr }; 
+			}
 			Number& operator=(const INumber& other) {
 				Number newone{ other.v() };
-				other.update(newone.expression(), 1);
+				other.update(*(newone.expr_), 1);
 				this->v_ = newone.v_;
 				this->expr_ = newone.expr_;
 				return *this;
