@@ -36,3 +36,4 @@
 #include "ad33_template.hpp"
 #include "ad35_refactoring_20_shrd.hpp"
 #include "ad36_template_35.hpp"
+#include "ad37_2nd_diff_based_on_35.hpp"
