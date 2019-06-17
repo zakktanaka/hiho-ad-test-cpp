@@ -242,8 +242,9 @@ namespace {
 	}
 
 	using Number  = math::Number<double, math::Expression<double>>;
+	using NNumber = math::Number<double, math::Expression<Number>>;
 
-	using Real = Number;
+	using Real = NNumber;
 
 	inline Real putAmericanOption(const Real& s, const Real& sigma, const Real& k, const Real& r, const Real& t, int simulation) {
 
@@ -292,9 +293,10 @@ void hiho::ad37_2nd_diff_based_on_35(double s, double sigma, double k, double r,
 
 		auto diff = value.v() - hiho::american(s, sigma, k, r, t, simulation);
 
-		auto delta = hiho::newTimer([&]() {return value.d(rs); });
-		auto vega = hiho::newTimer([&]() {return value.d(rsigma); });
-		auto theta = hiho::newTimer([&]() {return value.d(rt); });
+		auto delta = hiho::newTimer([&]() {return value.d(rs).v(); });
+		auto vega = hiho::newTimer([&]() {return value.d(rsigma).v(); });
+		auto theta = hiho::newTimer([&]() {return value.d(rt).v(); });
+		//auto gamma = hiho::newTimer([&]() {return value.d(rs).d(rs); });
 
 		HIHO_IO_MAX_LEN_DOUBLE_LSHOW;
 		HIHO_IO_LEFT_COUT
