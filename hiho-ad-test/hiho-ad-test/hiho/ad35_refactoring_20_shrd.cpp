@@ -65,8 +65,7 @@ namespace {
 			void addExpresison(ValueType coef, const ExpPtr& other) {
 				if (other->marked) {
 					addTerm(coef, other);
-				}
-				else {
+				} else {
 					for (auto& otm : other->polynomial) {
 						auto c = coef * otm.second;
 						auto& e = otm.first;
@@ -77,8 +76,8 @@ namespace {
 		};
 
 		struct INumber {
-			virtual ValueType  v() const = 0;
 			virtual ~INumber() {}
+			virtual ValueType  v() const = 0;
 			virtual void update(Expression&, ValueType) const = 0;
 
 		};
@@ -92,6 +91,7 @@ namespace {
 				v_(vv), coef_(coef), num_(num) {}
 
 			ValueType v() const override { return v_; }
+
 			void update(Expression& updated, ValueType coef) const override {
 				num_.update(updated, coef * coef_);
 			}
@@ -111,6 +111,7 @@ namespace {
 				v_(vv), lcoef_(lcoef), rcoef_(rcoef), lnum_(lnum), rnum_(rnum) {}
 
 			ValueType v() const override { return v_; }
+			
 			void update(Expression& updated, ValueType coef) const override {
 				lnum_.update(updated, coef * lcoef_);
 				rnum_.update(updated, coef * rcoef_);
