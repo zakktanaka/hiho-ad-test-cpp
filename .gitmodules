@@ -1,0 +1,6 @@
+[submodule "hiho-ad/third-party/spdlog"]
+	path = hiho-ad/third-party/spdlog
+	url = https://github.com/gabime/spdlog.git
+[submodule "hiho-ad/third-party/cxxopts"]
+	path = hiho-ad/third-party/cxxopts
+	url = https://github.com/jarro2783/cxxopts.git
