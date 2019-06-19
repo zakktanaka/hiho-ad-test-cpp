@@ -65,6 +65,7 @@
   <ItemGroup>
     <ClInclude Include="include\Log.hpp" />
     <ClInclude Include="include\Test.hpp" />
+    <ClInclude Include="include\Timer.hpp" />
   </ItemGroup>
   <ItemDefinitionGroup />
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

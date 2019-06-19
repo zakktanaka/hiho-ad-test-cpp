@@ -7,3 +7,4 @@
 #pragma warning(pop)
 
 #include "Log.hpp"
+#include "Timer.hpp"
