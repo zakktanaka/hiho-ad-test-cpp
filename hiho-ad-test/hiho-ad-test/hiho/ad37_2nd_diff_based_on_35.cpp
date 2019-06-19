@@ -45,7 +45,7 @@ namespace {
 
 			void mark() { marked = true; }
 
-			ExprValueType d(ExpPtr& expr, Cache& cache) const {
+			ExprValueType d(const ExpPtr& expr, Cache& cache) const {
 				if (this == expr.get()) {
 					return 1;
 				}
@@ -175,7 +175,7 @@ namespace {
 				updated.addExpresison(coef, expr_);
 			}
 
-			ExprValueType d(ThisType& x) const {
+			ExprValueType d(const ThisType& x) const {
 				Cache cache;
 				return expr_->d(x.expr_, cache);
 			}
@@ -221,28 +221,50 @@ namespace {
 
 		using std::exp;
 		using std::sqrt;
+		using std::log;
 		using std::pow;
 
 		template<typename V, typename E>
 		Unary<V, E> exp(const INumber<V, E>& l) {
-			auto ll = exp(l.v());
-			return Unary{ ll, ll, l };
+			using ValueType = typename INumber<V, E>::ValueType;
+			ValueType ll = exp(l.v());
+			return Unary<V, E>{ ll, ll, l };
 		}
 		template<typename V, typename E>
 		Unary<V, E> sqrt(const INumber<V, E>& l) {
-			auto ll = sqrt(l.v());
-			return Unary{ ll, 0.5 / ll, l };
+			using ValueType = typename INumber<V, E>::ValueType;
+			ValueType ll = sqrt(l.v());
+			return Unary<V, E>{ ll, 0.5 / ll, l };
+		}
+		template<typename V, typename E>
+		Unary<V, E> log(const INumber<V, E>& l) {
+			using ValueType = typename INumber<V, E>::ValueType;
+			ValueType ll = log(l.v());
+			return Unary<V, E>{ ll, 1 / l.v(), l };
 		}
 		template<typename V, typename E>
 		Unary<V, E> pow(const INumber<V, E>& l, typename INumber<V, E>::ValueType r) {
-			auto ll = pow(l.v(), r);
-			return Unary{ ll, r * ll / l.v(), l };
+			using ValueType = typename INumber<V, E>::ValueType;
+			ValueType ll = pow(l.v(), r);
+			return Unary<V, E>{ ll, r* ll / l.v(), l };
+		}
+		template<typename V, typename E>
+		Unary<V, E> pow(typename INumber<V, E>::ValueType l, const INumber<V, E>& r) {
+			using ValueType = typename INumber<V, E>::ValueType;
+			auto ll = pow(l, r.v());
+			return Unary<V, E>{ ll, ll* log(l), r };
+		}
+		template<typename V, typename E>
+		Binary<V, E> pow(const INumber<V, E>& l, const INumber<V, E>& r) {
+			using ValueType = typename INumber<V, E>::ValueType;
+			ValueType ll = pow(l.v(), r.v());
+			return Binary<V, E>{ ll, r.v() * ll / l.v(), l, ll * log(l.v()), r };
 		}
 
 	}
 
 	using Number  = math::Number<double, math::Expression<double>>;
-	using NNumber = math::Number<double, math::Expression<Number>>;
+	using NNumber = math::Number<Number, math::Expression<Number>>;
 
 	using Real = NNumber;
 
@@ -257,7 +279,8 @@ namespace {
 		std::vector<Real> p;
 		for (int i = 0; i != simulation; ++i) {
 			Real pp = k - s * math::pow(up, 2.0 * i - simulation);
-			pp = pp > 0.0 ? pp : 0.0;
+			static Real zero{ 0.0 };
+			pp = pp > 0.0 ? pp : zero;
 			p.push_back(pp);
 		}
 
@@ -280,23 +303,23 @@ void hiho::ad37_2nd_diff_based_on_35(double s, double sigma, double k, double r,
 	pmr::set_default_resource(&pm);
 
 	{
-		Real rs{ s }; rs.mark();
-		Real rsigma{ sigma }; rsigma.mark();
-		Real rr{ r }; rr.mark();
-		Real rt{ t }; rt.mark();
+		Real rs{ s }; rs.mark(); rs.v().mark();
+		Real rsigma{ sigma }; rsigma.mark(); rsigma.v().mark();
+		Real rr{ r }; rr.mark(); rr.v().mark();
+		Real rt{ t }; rt.mark(); rt.v().mark();
 
 		auto func = [&]() {
-			return putAmericanOption(rs, rsigma, k, rr, rt, simulation);
+			return putAmericanOption(rs, rsigma, Real{ k }, rr, rt, simulation);
 		};
 		auto time = hiho::measureTime<3>(func);
 		auto value = func();
 
-		auto diff = value.v() - hiho::american(s, sigma, k, r, t, simulation);
+		auto diff = value.v().v() - hiho::american(s, sigma, k, r, t, simulation);
 
 		auto delta = hiho::newTimer([&]() {return value.d(rs).v(); });
 		auto vega = hiho::newTimer([&]() {return value.d(rsigma).v(); });
 		auto theta = hiho::newTimer([&]() {return value.d(rt).v(); });
-		//auto gamma = hiho::newTimer([&]() {return value.d(rs).d(rs); });
+		auto gamma = hiho::newTimer([&]() {return value.d(rs).d(rs.v()); });
 
 		HIHO_IO_MAX_LEN_DOUBLE_LSHOW;
 		HIHO_IO_LEFT_COUT
@@ -307,6 +330,7 @@ void hiho::ad37_2nd_diff_based_on_35(double s, double sigma, double k, double r,
 			<< ", " << HIHO_IO_VALUE_TIME(delta)
 			<< ", " << HIHO_IO_VALUE_TIME(vega)
 			<< ", " << HIHO_IO_VALUE_TIME(theta)
+			<< ", " << HIHO_IO_VALUE_TIME(gamma)
 			<< std::endl;
 	}
 
