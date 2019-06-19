@@ -5,6 +5,10 @@ VisualStudioVersion = 16.0.29009.5
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "hiho-ad-test", "test\hiho-ad-test\hiho-ad-test.vcxproj", "{A6BDB603-6819-4BD2-A8B7-07706A044D34}"
 EndProject
+Project("{2150E333-8FDC-42A3-9474-1A3956D46DE8}") = "include", "include", "{E220371D-5F14-485B-AAE7-14FD60C0F7F5}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "ad", "include\ad\ad.vcxproj", "{A633DC24-C0F8-49C1-98BC-E1087A5BB81A}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|x64 = Debug|x64
@@ -21,9 +25,20 @@ Global
 		{A6BDB603-6819-4BD2-A8B7-07706A044D34}.Release|x64.Build.0 = Release|x64
 		{A6BDB603-6819-4BD2-A8B7-07706A044D34}.Release|x86.ActiveCfg = Release|Win32
 		{A6BDB603-6819-4BD2-A8B7-07706A044D34}.Release|x86.Build.0 = Release|Win32
+		{A633DC24-C0F8-49C1-98BC-E1087A5BB81A}.Debug|x64.ActiveCfg = Debug|x64
+		{A633DC24-C0F8-49C1-98BC-E1087A5BB81A}.Debug|x64.Build.0 = Debug|x64
+		{A633DC24-C0F8-49C1-98BC-E1087A5BB81A}.Debug|x86.ActiveCfg = Debug|Win32
+		{A633DC24-C0F8-49C1-98BC-E1087A5BB81A}.Debug|x86.Build.0 = Debug|Win32
+		{A633DC24-C0F8-49C1-98BC-E1087A5BB81A}.Release|x64.ActiveCfg = Release|x64
+		{A633DC24-C0F8-49C1-98BC-E1087A5BB81A}.Release|x64.Build.0 = Release|x64
+		{A633DC24-C0F8-49C1-98BC-E1087A5BB81A}.Release|x86.ActiveCfg = Release|Win32
+		{A633DC24-C0F8-49C1-98BC-E1087A5BB81A}.Release|x86.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
+	EndGlobalSection
+	GlobalSection(NestedProjects) = preSolution
+		{A633DC24-C0F8-49C1-98BC-E1087A5BB81A} = {E220371D-5F14-485B-AAE7-14FD60C0F7F5}
 	EndGlobalSection
 	GlobalSection(ExtensibilityGlobals) = postSolution
 		SolutionGuid = {B72E94B8-18D3-4A8A-82F9-E4C9D6BAD68D}
