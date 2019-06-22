@@ -7,20 +7,22 @@
 
 namespace { namespace sandbox {
 
-	using ValueType = double;
-
+	template<typename T>
 	class Expression {
 	public:
-		using Cache      = std::unordered_map<const void*, ValueType>;
-		using ExpPtr     = std::shared_ptr<Expression>;
-		using Term       = std::pair<ExpPtr, ValueType>;
-		using Polynomial = std::vector<Term>;
+		using ExprValueType = T;
+		using ThisType = Expression<ExprValueType>;
+		using Cache    = std::unordered_map<const void*, ExprValueType>;
+		using ExpPtr   = std::shared_ptr<ThisType>;
 
 	private:
+		using Term       = std::pair<ExpPtr, ExprValueType>;
+		using Polynomial = std::vector<Term>;
+
 		bool marked;
 		Polynomial polynomial;
 
-		void addTerm(ValueType coef, const ExpPtr& other) {
+		void addTerm(ExprValueType coef, const ExpPtr& other) {
 			for (auto& tm : polynomial) {
 				if (tm.first == other) {
 					tm.second += coef;
@@ -30,13 +32,12 @@ namespace { namespace sandbox {
 			polynomial.emplace_back(other, coef);
 		}
 
-
 	public:
 		Expression() : marked{ false }, polynomial{} {}
 
 		void mark() { marked = true; }
 
-		ValueType d(ExpPtr& expr, Cache& cache) const {
+		ExprValueType d(ExpPtr& expr, Cache& cache) const {
 			if (this == expr.get()) {
 				return 1;
 			}
@@ -46,7 +47,7 @@ namespace { namespace sandbox {
 				return it->second;
 			}
 
-			ValueType dx = 0;
+			ExprValueType dx = 0;
 			for (auto& term : polynomial) {
 				dx += term.second * term.first->d(expr, cache);
 			}
@@ -54,13 +55,13 @@ namespace { namespace sandbox {
 			return dx;
 		}
 
-		void addExpresison(ValueType coef, const ExpPtr& other) {
+		void addExpresison(ExprValueType coef, const ExpPtr& other) {
 			if (other->marked) {
 				addTerm(coef, other);
 			}
 			else {
 				for (auto& otm : other->polynomial) {
-					auto c = coef * otm.second;
+					ExprValueType c = coef * otm.second;
 					auto& e = otm.first;
 					addExpresison(c, e);
 				}
@@ -68,52 +69,75 @@ namespace { namespace sandbox {
 		}
 	};
 
+	template<typename T>
 	struct INumber {
+		using ValueType = T;
+		using Expr      = Expression<ValueType>;
+		using ThisType  = INumber<ValueType>;
+
 		virtual ~INumber() {}
 		virtual ValueType  v() const = 0;
-		virtual void update(Expression&, ValueType) const = 0;
+		virtual void update(Expr&, ValueType) const = 0;
 	};
 
-	struct Unary : INumber {
+	template<typename T>
+	struct Unary : INumber<T> {
+		using BaseType  = INumber<T>;
+		using ValueType = typename BaseType::ValueType;
+		using Expr      = typename BaseType::Expr;
+		using ThisType  = Unary<ValueType>;
+
 		ValueType v_;
 		ValueType coef_;
-		const INumber& num_;
+		const BaseType& num_;
 
-		Unary(ValueType vv, ValueType coef, const INumber& num) :
+		Unary(ValueType vv, ValueType coef, const BaseType& num) :
 			v_(vv), coef_(coef), num_(num) {}
 
 		ValueType v() const override { return v_; }
 
-		void update(Expression& updated, ValueType coef) const override {
+		void update(Expr& updated, ValueType coef) const override {
 			num_.update(updated, coef * coef_);
 		}
 	};
 
-	struct Binary : INumber {
+	template<typename T>
+	struct Binary : INumber<T> {
+		using BaseType  = INumber<T>;
+		using ValueType = typename BaseType::ValueType;
+		using Expr      = typename BaseType::Expr;
+		using ThisType  = Binary<ValueType>;
+
 		ValueType v_;
 		ValueType lcoef_;
 		ValueType rcoef_;
-		const INumber& lnum_;
-		const INumber& rnum_;
+		const BaseType& lnum_;
+		const BaseType& rnum_;
 
 		Binary(
 			ValueType vv,
-			ValueType lcoef, const INumber& lnum,
-			ValueType rcoef, const INumber& rnum) :
+			ValueType lcoef, const BaseType& lnum,
+			ValueType rcoef, const BaseType& rnum) :
 			v_(vv), lcoef_(lcoef), rcoef_(rcoef), lnum_(lnum), rnum_(rnum) {}
 
 		ValueType v() const override { return v_; }
 
-		void update(Expression& updated, ValueType coef) const override {
+		void update(Expr& updated, ValueType coef) const override {
 			lnum_.update(updated, coef * lcoef_);
 			rnum_.update(updated, coef * rcoef_);
 		}
 	};
 
-	class Number : public INumber {
+	template<typename T>
+	class Number : public INumber<T> {
+		using BaseType  = INumber<T>;
+		using ValueType = typename BaseType::ValueType;
+		using Expr      = typename BaseType::Expr;
+		using ThisType  = Number<ValueType>;
+
 	private:
-		using Cache  = typename Expression::Cache;
-		using ExpPtr = typename Expression::ExpPtr;
+		using Cache  = typename Expr::Cache;
+		using ExpPtr = typename Expr::ExpPtr;
 
 		ValueType  v_;
 		ExpPtr     expr_;
@@ -122,9 +146,9 @@ namespace { namespace sandbox {
 
 	public:
 		Number(ValueType vv) :
-			Number{ vv , std::make_shared<Expression>() } {}
-		Number(const INumber& other) :
-			Number{ other.v(), std::make_shared<Expression>() } {
+			ThisType{ vv , std::make_shared<Expr>() } {}
+		Number(const BaseType& other) :
+			ThisType{ other.v(), std::make_shared<Expr>() } {
 			other.update(*expr_, 1);
 		};
 		~Number() {}
@@ -133,43 +157,40 @@ namespace { namespace sandbox {
 
 		ValueType v() const override { return v_; }
 
-		void update(Expression& updated, ValueType coef) const override {
+		void update(Expr& updated, ValueType coef) const override {
 			updated.addExpresison(coef, expr_);
 		}
 
-		ValueType d(Number& x) const {
+		ValueType d(ThisType& x) const {
 			Cache cache;
 			return expr_->d(x.expr_, cache);
 		}
 
-		Number& operator=(const INumber& other) {
-			Number newone{ other.v() };
-			other.update(*(newone.expr_), 1);
+		ThisType& operator=(const BaseType& other) {
+			ThisType newone{ other.v() };
+			static ValueType one{ 1 };
+			other.update(*(newone.expr_), one);
 			this->v_ = newone.v_;
 			this->expr_ = newone.expr_;
 			return *this;
 		}
 	};
 
-	Binary operator*(const INumber& l, const INumber& r) { return Binary{ l.v() * r.v(), r.v(), l, l.v(), r }; }
+	template<typename T> Binary<T> operator*(const INumber<T>& l, const INumber<T>& r) { return Binary<T>{ l.v() * r.v(), r.v(), l, l.v(), r }; }
 
 	using std::exp;
 
-	Unary exp(const INumber& l) {
+	template<typename T>
+	Unary<T> exp(const INumber<T>& l) {
 		auto ll = exp(l.v());
-		return Unary{ ll, ll, l };
+		return Unary<T>{ ll, ll, l };
 	}
 
 } }
 
-namespace {
-	using namespace sandbox;
-
-	using Number = sandbox::Number;
-}
-
 TEST(Sandbox, TestName) {
-	using Real = Number;
+	using namespace sandbox;
+	using Real = Number<double>;
 
 	constexpr double err  = 1e-12;
 	constexpr int    loop = 1000000;
