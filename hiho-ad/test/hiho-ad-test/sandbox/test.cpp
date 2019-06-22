@@ -145,6 +145,8 @@ namespace { namespace sandbox {
 		Number(ValueType vv, ExpPtr expr) : v_{ vv }, expr_{ expr }  {}
 
 	public:
+		Number() :
+			ThisType{ 1 , std::make_shared<Expr>() } {}
 		Number(ValueType vv) :
 			ThisType{ vv , std::make_shared<Expr>() } {}
 		Number(const BaseType& other) :
@@ -174,15 +176,23 @@ namespace { namespace sandbox {
 			this->expr_ = newone.expr_;
 			return *this;
 		}
+		ThisType& operator+=(const BaseType& other) {
+			ThisType newone = *this + other;
+			this->v_ = newone.v_;
+			this->expr_ = newone.expr_;
+			return *this;
+		}
 	};
 
-	template<typename T> Binary<T> operator*(const INumber<T>& l, const INumber<T>& r) { return Binary<T>{ l.v() * r.v(), r.v(), l, l.v(), r }; }
+	template<typename T> Binary<T> operator+(const INumber<T>& l, const INumber<T>& r) { return Binary<T>{ l.v()+ r.v(), 1, l, 1, r }; }
+	template<typename T> Binary<T> operator*(const INumber<T>& l, const INumber<T>& r) { return Binary<T>{ l.v()* r.v(), r.v(), l, l.v(), r }; }
 
 	using std::exp;
 
 	template<typename T>
 	Unary<T> exp(const INumber<T>& l) {
-		auto ll = exp(l.v());
+		using ValueType = typename INumber<T>::ValueType;
+		ValueType ll = exp(l.v());
 		return Unary<T>{ ll, ll, l };
 	}
 
@@ -190,6 +200,7 @@ namespace { namespace sandbox {
 
 namespace {
 	using Number = sandbox::Number<double>;
+	using NNumber = sandbox::Number<Number>;
 	namespace math = sandbox;
 }
 
@@ -224,4 +235,37 @@ TEST(Sandbox, firstdiff) {
 	EXPECT_LE  (actual.duration(),     expected.duration() * 400);
 	EXPECT_NEAR(expected.value,        actual.value.v(),  err);
 	EXPECT_NEAR(expected.value * loop, actual.value.d(x), err * loop);
+}
+
+TEST(Sandbox, seconddiff) {
+	using Real = NNumber;
+
+	constexpr double err = 1e-12;
+	constexpr int    loop = 1000000;
+	constexpr double xx = 2.0 / loop;
+
+	Real x{ xx }; x.mark(); x.v().mark();
+
+	auto func = [&]() {
+		Real ans = math::exp(Real{ -1 });
+		for (int i = 0; i < loop; ++i) {
+			ans = ans * math::exp(x);
+		}
+		return ans;
+	};
+	auto actual = hiho::test::newTimer(func);
+
+	auto expectfunc = [&]() {
+		auto ans = math::exp(-1);
+		for (int i = 0; i < loop; ++i) {
+			ans = ans * math::exp(xx);
+		}
+		return ans;
+	};
+	auto expected = hiho::test::newTimer(expectfunc);
+
+	EXPECT_LE(actual.duration(), expected.duration() * 400);
+	EXPECT_NEAR(expected.value, actual.value.v().v(), err);
+	EXPECT_NEAR(expected.value * loop, actual.value.d(x).v(), err * loop);
+	EXPECT_NEAR(expected.value * loop * loop, actual.value.d(x).d(x.v()), err * loop * loop);
 }
