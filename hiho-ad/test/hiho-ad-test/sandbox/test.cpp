@@ -188,9 +188,13 @@ namespace { namespace sandbox {
 
 } }
 
-TEST(Sandbox, TestName) {
-	using namespace sandbox;
-	using Real = Number<double>;
+namespace {
+	using Number = sandbox::Number<double>;
+	namespace math = sandbox;
+}
+
+TEST(Sandbox, firstdiff) {
+	using Real = Number;
 
 	constexpr double err  = 1e-12;
 	constexpr int    loop = 1000000;
@@ -199,9 +203,9 @@ TEST(Sandbox, TestName) {
 	Real x{ xx }; x.mark();
 
 	auto func = [&]() {
-		Real ans = exp(Real{ -1 });
+		Real ans = math::exp(Real{ -1 });
 		for (int i = 0; i < loop; ++i) {
-			ans = ans * exp(x);
+			ans = ans * math::exp(x);
 		}
 
 		return ans;
@@ -209,9 +213,9 @@ TEST(Sandbox, TestName) {
 	auto actual = hiho::test::newTimer(func);
 
 	auto expectfunc = [&]() {
-		auto ans = exp(-1);
+		auto ans = math::exp(-1);
 		for (int i = 0; i < loop; ++i) {
-			ans = ans * exp(xx);
+			ans = ans * math::exp(xx);
 		}
 		return ans;
 	};
