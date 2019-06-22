@@ -55,7 +55,7 @@ namespace { namespace sandbox {
 			return dx;
 		}
 
-		void addExpresison(ExprValueType coef, const ExpPtr& other) {
+		void addExpresison(const ExprValueType& coef, const ExpPtr& other) {
 			if (other->marked) {
 				addTerm(coef, other);
 			}
@@ -77,7 +77,7 @@ namespace { namespace sandbox {
 
 		virtual ~INumber() {}
 		virtual ValueType  v() const = 0;
-		virtual void update(Expr&, ValueType) const = 0;
+		virtual void update(Expr&, const ValueType&) const = 0;
 	};
 
 	template<typename T>
@@ -96,7 +96,7 @@ namespace { namespace sandbox {
 
 		ValueType v() const override { return v_; }
 
-		void update(Expr& updated, ValueType coef) const override {
+		void update(Expr& updated, const ValueType& coef) const override {
 			num_.update(updated, coef * coef_);
 		}
 	};
@@ -122,7 +122,7 @@ namespace { namespace sandbox {
 
 		ValueType v() const override { return v_; }
 
-		void update(Expr& updated, ValueType coef) const override {
+		void update(Expr& updated, const ValueType& coef) const override {
 			lnum_.update(updated, coef * lcoef_);
 			rnum_.update(updated, coef * rcoef_);
 		}
@@ -157,7 +157,7 @@ namespace { namespace sandbox {
 
 		ValueType v() const override { return v_; }
 
-		void update(Expr& updated, ValueType coef) const override {
+		void update(Expr& updated, const ValueType& coef) const override {
 			updated.addExpresison(coef, expr_);
 		}
 
