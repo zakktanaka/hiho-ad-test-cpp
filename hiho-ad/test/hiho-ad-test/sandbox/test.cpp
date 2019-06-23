@@ -7,10 +7,10 @@
 
 namespace { namespace sandbox {
 
-	template<typename T>
+	template<typename V>
 	class Expression {
 	public:
-		using ExprValueType = T;
+		using ExprValueType = V;
 		using ThisType = Expression<ExprValueType>;
 		using Cache    = std::unordered_map<const void*, ExprValueType>;
 		using ExpPtr   = std::shared_ptr<ThisType>;
@@ -69,9 +69,9 @@ namespace { namespace sandbox {
 		}
 	};
 
-	template<typename T>
+	template<typename V>
 	struct INumber {
-		using ValueType = T;
+		using ValueType = V;
 		using Expr      = Expression<ValueType>;
 		using ThisType  = INumber<ValueType>;
 
@@ -80,9 +80,9 @@ namespace { namespace sandbox {
 		virtual void update(Expr&, const ValueType&) const = 0;
 	};
 
-	template<typename T>
-	struct Unary : INumber<T> {
-		using BaseType  = INumber<T>;
+	template<typename V>
+	struct Unary : INumber<V> {
+		using BaseType  = INumber<V>;
 		using ValueType = typename BaseType::ValueType;
 		using Expr      = typename BaseType::Expr;
 		using ThisType  = Unary<ValueType>;
@@ -101,9 +101,9 @@ namespace { namespace sandbox {
 		}
 	};
 
-	template<typename T>
-	struct Binary : INumber<T> {
-		using BaseType  = INumber<T>;
+	template<typename V>
+	struct Binary : INumber<V> {
+		using BaseType  = INumber<V>;
 		using ValueType = typename BaseType::ValueType;
 		using Expr      = typename BaseType::Expr;
 		using ThisType  = Binary<ValueType>;
@@ -128,9 +128,9 @@ namespace { namespace sandbox {
 		}
 	};
 
-	template<typename T>
-	class Number : public INumber<T> {
-		using BaseType  = INumber<T>;
+	template<typename V>
+	class Number : public INumber<V> {
+		using BaseType  = INumber<V>;
 		using ValueType = typename BaseType::ValueType;
 		using Expr      = typename BaseType::Expr;
 		using ThisType  = Number<ValueType>;
@@ -185,16 +185,16 @@ namespace { namespace sandbox {
 		}
 	};
 
-	template<typename T> auto operator+(const INumber<T>& l, const INumber<T>& r) { return Binary<T>{ l.v()+ r.v(), 1, l, 1, r }; }
-	template<typename T> auto operator*(const INumber<T>& l, const INumber<T>& r) { return Binary<T>{ l.v()* r.v(), r.v(), l, l.v(), r }; }
+	template<typename V> auto operator+(const INumber<V>& l, const INumber<V>& r) { return Binary<V>{ l.v() + r.v(), 1, l, 1, r }; }
+	template<typename V> auto operator*(const INumber<V>& l, const INumber<V>& r) { return Binary<V>{ l.v()* r.v(), r.v(), l, l.v(), r }; }
 
 	using std::exp;
 
-	template<typename T>
-	auto exp(const INumber<T>& l) {
-		using ValueType = typename INumber<T>::ValueType;
+	template<typename V>
+	auto exp(const INumber<V>& l) {
+		using ValueType = typename INumber<V>::ValueType;
 		ValueType ll = exp(l.v());
-		return Unary<T>{ ll, ll, l };
+		return Unary<V>{ ll, ll, l };
 	}
 
 } }
