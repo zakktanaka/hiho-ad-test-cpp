@@ -266,6 +266,7 @@ TEST(Sandbox, seconddiff) {
 
 	EXPECT_LE(actual.duration(), expected.duration() * 400);
 	EXPECT_NEAR(expected.value, actual.value.v().v(), err);
+	EXPECT_NEAR(expected.value * loop, actual.value.v().d(x.v()), err * loop);
 	EXPECT_NEAR(expected.value * loop, actual.value.d(x).v(), err * loop);
 	EXPECT_NEAR(expected.value * loop * loop, actual.value.d(x).d(x.v()), err * loop * loop);
 }
