@@ -76,7 +76,7 @@ namespace { namespace sandbox {
 		using ThisType  = INumber<ValueType>;
 
 		virtual ~INumber() {}
-		virtual ValueType  v() const = 0;
+		virtual const ValueType& v() const = 0;
 		virtual void update(Expr&, const ValueType&) const = 0;
 	};
 
@@ -94,7 +94,7 @@ namespace { namespace sandbox {
 		Unary(ValueType vv, ValueType coef, const BaseType& num) :
 			v_(vv), coef_(coef), num_(num) {}
 
-		ValueType v() const override { return v_; }
+		const ValueType& v() const override { return v_; }
 
 		void update(Expr& updated, const ValueType& coef) const override {
 			num_.update(updated, coef * coef_);
@@ -120,7 +120,7 @@ namespace { namespace sandbox {
 			ValueType rcoef, const BaseType& rnum) :
 			v_(vv), lcoef_(lcoef), rcoef_(rcoef), lnum_(lnum), rnum_(rnum) {}
 
-		ValueType v() const override { return v_; }
+		const ValueType& v() const override { return v_; }
 
 		void update(Expr& updated, const ValueType& coef) const override {
 			lnum_.update(updated, coef * lcoef_);
@@ -139,8 +139,8 @@ namespace { namespace sandbox {
 		using Cache  = typename Expr::Cache;
 		using ExpPtr = typename Expr::ExpPtr;
 
-		ValueType  v_;
-		ExpPtr     expr_;
+		ValueType v_;
+		ExpPtr    expr_;
 
 		Number(ValueType vv, ExpPtr expr) : v_{ vv }, expr_{ expr }  {}
 
@@ -157,7 +157,8 @@ namespace { namespace sandbox {
 
 		void mark() { expr_->mark(); }
 
-		ValueType v() const override { return v_; }
+		ValueType& v() { return v_; }
+		const ValueType& v() const override { return v_; }
 
 		void update(Expr& updated, const ValueType& coef) const override {
 			updated.addExpresison(coef, expr_);
@@ -264,9 +265,38 @@ TEST(Sandbox, seconddiff) {
 	};
 	auto expected = hiho::test::newTimer(expectfunc);
 
-	EXPECT_LE(actual.duration(), expected.duration() * 400);
 	EXPECT_NEAR(expected.value, actual.value.v().v(), err);
 	EXPECT_NEAR(expected.value * loop, actual.value.v().d(x.v()), err * loop);
 	EXPECT_NEAR(expected.value * loop, actual.value.d(x).v(), err * loop);
 	EXPECT_NEAR(expected.value * loop * loop, actual.value.d(x).d(x.v()), err * loop * loop);
+}
+
+TEST(Sandbox, seconddifftime) {
+	using Real = NNumber;
+
+	constexpr double err = 1e-12;
+	constexpr int    loop = 1000000;
+	constexpr double xx = 2.0 / loop;
+
+	Real x{ xx }; x.mark(); x.v().mark();
+
+	auto func = [&]() {
+		Real ans = math::exp(Real{ -1 });
+		for (int i = 0; i < loop; ++i) {
+			ans = ans * math::exp(x);
+		}
+		return ans;
+	};
+	auto actual = hiho::test::newTimer(func);
+
+	auto expectfunc = [&]() {
+		auto ans = math::exp(-1);
+		for (int i = 0; i < loop; ++i) {
+			ans = ans * math::exp(xx);
+		}
+		return ans;
+	};
+	auto expected = hiho::test::newTimer(expectfunc);
+
+	EXPECT_LE(actual.duration(), expected.duration() * 400);
 }
