@@ -184,13 +184,13 @@ namespace { namespace sandbox {
 		}
 	};
 
-	template<typename T> Binary<T> operator+(const INumber<T>& l, const INumber<T>& r) { return Binary<T>{ l.v()+ r.v(), 1, l, 1, r }; }
-	template<typename T> Binary<T> operator*(const INumber<T>& l, const INumber<T>& r) { return Binary<T>{ l.v()* r.v(), r.v(), l, l.v(), r }; }
+	template<typename T> auto operator+(const INumber<T>& l, const INumber<T>& r) { return Binary<T>{ l.v()+ r.v(), 1, l, 1, r }; }
+	template<typename T> auto operator*(const INumber<T>& l, const INumber<T>& r) { return Binary<T>{ l.v()* r.v(), r.v(), l, l.v(), r }; }
 
 	using std::exp;
 
 	template<typename T>
-	Unary<T> exp(const INumber<T>& l) {
+	auto exp(const INumber<T>& l) {
 		using ValueType = typename INumber<T>::ValueType;
 		ValueType ll = exp(l.v());
 		return Unary<T>{ ll, ll, l };
@@ -199,7 +199,7 @@ namespace { namespace sandbox {
 } }
 
 namespace {
-	using Number = sandbox::Number<double>;
+	using Number  = sandbox::Number<double>;
 	using NNumber = sandbox::Number<Number>;
 	namespace math = sandbox;
 }
