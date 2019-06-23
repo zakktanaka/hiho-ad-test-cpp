@@ -7,10 +7,10 @@
 
 namespace { namespace sandbox {
 
-	template<typename V>
+	template<typename EV>
 	class Expression {
 	public:
-		using ExprValueType = V;
+		using ExprValueType = EV;
 		using ThisType = Expression<ExprValueType>;
 		using Cache    = std::unordered_map<const void*, ExprValueType>;
 		using ExpPtr   = std::shared_ptr<ThisType>;
